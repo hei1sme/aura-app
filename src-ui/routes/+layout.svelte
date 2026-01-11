@@ -18,23 +18,16 @@
   let warningSeconds = 0;
   let warningTimer: any = null;
 
-  // Debug State
-  let lastDebugEvent = "Waiting for events...";
-  let debugVisible = false;
-
   onMount(async () => {
     // Setup global event listeners
     unlisteners = await Promise.all([
       onScheduleActionExecuted((data) => {
-        lastDebugEvent = `Action: ${data.action} at ${data.time}`;
         showWarning = false;
         if (warningTimer) clearInterval(warningTimer);
       }),
       onScheduleWarning((data) => {
         // Disabled: Using system notification window instead
         // showWarningToast(data.action, data.time, data.title, data.seconds_remaining); // Assuming these parameters based on the instruction's intent
-        const msg = `${data.title} in ${data.seconds_remaining}s`;
-        lastDebugEvent = `Warning: ${msg}`;
         console.log("[Layout] Schedule warning received:", data);
 
         // Toast disabled.
@@ -43,9 +36,6 @@
       }),
       onStatus((status) => {
         // Just to show we are connected
-        if (lastDebugEvent === "Waiting for events...") {
-          lastDebugEvent = `Connected.`;
-        }
       }),
     ]);
   });
@@ -54,26 +44,6 @@
     unlisteners.forEach((unlisten) => unlisten());
     if (warningTimer) clearInterval(warningTimer);
   });
-
-  async function testToast() {
-    // Test In-App
-    showWarning = true;
-    warningTitle = "Debug Test Rule";
-    warningSeconds = 60;
-
-    if (warningTimer) clearInterval(warningTimer);
-    warningTimer = setInterval(() => {
-      if (warningSeconds > 0) warningSeconds--;
-    }, 1000);
-
-    lastDebugEvent = "Test Toast Triggered (Local + Window)";
-
-    try {
-      await invoke("debug_notification");
-    } catch (e) {
-      console.error("Debug Window Error", e);
-    }
-  }
 </script>
 
 <div class="app-container">
@@ -93,56 +63,12 @@
       >
     </div>
   {/if}
-
-  <!-- Debug Overlay -->
-  {#if debugVisible}
-    <div class="debug-overlay">
-      <div class="text-xs font-mono mb-2">Debug Info:</div>
-      <div class="text-xs opacity-70 mb-2">{lastDebugEvent}</div>
-      <button class="btn btn-xs btn-warning" on:click={testToast}
-        >Test Toast</button
-      >
-      <button
-        class="btn btn-xs btn-ghost"
-        on:click={() => (debugVisible = false)}>Hide</button
-      >
-    </div>
-  {/if}
-  <button class="debug-toggle" on:click={() => (debugVisible = !debugVisible)}
-    >🐞</button
-  >
 </div>
 
 <style>
   .app-container {
     position: relative;
     min-height: 100vh;
-  }
-
-  .debug-toggle {
-    position: fixed;
-    bottom: 0.5rem;
-    left: 0.5rem;
-    background: rgba(0, 0, 0, 0.5);
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    font-size: 12px;
-    cursor: pointer;
-    z-index: 10000;
-  }
-
-  .debug-overlay {
-    position: fixed;
-    bottom: 2.5rem;
-    left: 0.5rem;
-    background: rgba(0, 0, 0, 0.9);
-    padding: 1rem;
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 10000;
-    max-width: 300px;
   }
 
   /* Warning Toast */

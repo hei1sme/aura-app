@@ -52,8 +52,8 @@ We ditched the boring system notifications for something better.
 
 <div align="center">
   <!-- Check out the 'assets' folder for these images -->
-  <img src="https://via.placeholder.com/800x450/1a1b26/38bdf8?text=Session+Hub" alt="Session Hub" width="48%" />
-  <img src="https://via.placeholder.com/800x450/1a1b26/10b981?text=Smart+Overlay" alt="Smart Overlay" width="48%" />
+  <img src="assets/SessionHub.png" alt="Session Hub" width="48%" />
+  <img src="assets/SmartOverlay.png" alt="Smart Overlay" width="48%" />
 </div>
 
 ---
@@ -81,7 +81,8 @@ graph LR
 
 ### Prerequisites
 
-* [Node.js](https://nodejs.org/) (v16+)
+- [Node.js](https://nodejs.org/) (v16+)
+
 - [Rust](https://www.rust-lang.org/)
 - [Python 3.11](https://www.python.org/)
 
@@ -90,7 +91,7 @@ graph LR
 1. **Clone the repository**:
 
     ```bash
-    git clone https://github.com/yourusername/aura.git
+    git clone https://github.com/hei1sme/aura-app.git
     cd aura/aura-app
     ```
 
@@ -128,7 +129,7 @@ The installer will be at: `src-tauri/target/release/bundle/nsis/Aura_1.3.0_x64-s
 
 ## 🤝 Contributing
 
-We welcome contributions! Please check the [Issues](https://github.com/yourusername/aura/issues) page.
+We welcome contributions! Please check the [Issues](https://github.com/hei1sme/aura-app/issues) page.
 
 <div align="center">
   <br />
