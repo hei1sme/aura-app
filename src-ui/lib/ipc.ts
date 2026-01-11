@@ -206,6 +206,60 @@ export async function endSession(): Promise<void> {
   return invoke('end_session');
 }
 
+// ===== SCHEDULE RULES =====
+
+export interface ScheduleRule {
+  id: number;
+  title: string;      // Optional descriptive title
+  time: string;       // "HH:MM" 24-hour format
+  action: 'pause' | 'resume' | 'reset' | 'start_session' | 'end_session';
+  days: string[];     // ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+  enabled: boolean;
+  created_at: number;
+}
+
+/**
+ * Get all schedule rules
+ */
+export async function getScheduleRules(): Promise<void> {
+  return invoke('get_schedule_rules');
+}
+
+/**
+ * Add a new schedule rule
+ */
+export async function addScheduleRule(time: string, action: string, days: string[], title: string = ""): Promise<void> {
+  return invoke('add_schedule_rule', { time, action, days, title });
+}
+
+/**
+ * Update an existing schedule rule
+ */
+export async function updateScheduleRule(
+  id: number,
+  time: string,
+  action: string,
+  days: string[],
+  enabled: boolean,
+  title: string = ""
+): Promise<void> {
+  return invoke('update_schedule_rule', { id, time, action, days, enabled, title });
+}
+
+/**
+ * Delete a schedule rule
+ */
+export async function deleteScheduleRule(id: number): Promise<void> {
+  return invoke('delete_schedule_rule', { id });
+}
+
+/**
+ * Reset all break timers without changing session state
+ */
+export async function resetAllTimers(): Promise<void> {
+  return invoke('reset_all_timers');
+}
+
 /**
  * Show the overlay window (used to manually trigger overlay)
  */
@@ -398,6 +452,66 @@ export function onSettingUpdated(callback: EventCallback<{ key: string; value: s
 export function onDataExported(callback: EventCallback<{ path: string; records: number }>): Promise<UnlistenFn> {
   return listen('sidecar-data_exported', (event) => {
     const sidecarEvent = event.payload as SidecarEvent<{ path: string; records: number }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to schedule rules updates
+ */
+export function onScheduleRules(callback: EventCallback<{ rules: ScheduleRule[] }>): Promise<UnlistenFn> {
+  return listen('sidecar-schedule_rules', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ rules: ScheduleRule[] }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to schedule rule added event
+ */
+export function onScheduleRuleAdded(callback: EventCallback<{ id: number; rules: ScheduleRule[] }>): Promise<UnlistenFn> {
+  return listen('sidecar-schedule_rule_added', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ id: number; rules: ScheduleRule[] }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to schedule rule updated event
+ */
+export function onScheduleRuleUpdated(callback: EventCallback<{ id: number; rules: ScheduleRule[] }>): Promise<UnlistenFn> {
+  return listen('sidecar-schedule_rule_updated', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ id: number; rules: ScheduleRule[] }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to schedule rule deleted event
+ */
+export function onScheduleRuleDeleted(callback: EventCallback<{ id: number; rules: ScheduleRule[] }>): Promise<UnlistenFn> {
+  return listen('sidecar-schedule_rule_deleted', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ id: number; rules: ScheduleRule[] }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to schedule action executed events (when a rule triggers)
+ */
+export function onScheduleActionExecuted(callback: EventCallback<{ action: string; time: string; title: string }>): Promise<UnlistenFn> {
+  return listen('sidecar-schedule_action_executed', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ action: string; time: string; title: string }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to schedule warning events (1 minute before rule triggers)
+ */
+export function onScheduleWarning(callback: EventCallback<{ action: string; time: string; title: string; seconds_remaining: number }>): Promise<UnlistenFn> {
+  return listen('sidecar-schedule_warning', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ action: string; time: string; title: string; seconds_remaining: number }>;
     callback(sidecarEvent.data!);
   });
 }

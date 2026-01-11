@@ -371,6 +371,8 @@ class BreakScheduler:
         not wall-clock time. Timer pauses when user is idle.
         
         Priority: MACRO > MICRO > HYDRATION
+        
+        Note: Hydration breaks are suppressed if daily goal is already met.
         """
         # Check macro break first (higher priority)
         if self._active_seconds_since_break[BreakType.MACRO] >= self._configs[BreakType.MACRO].interval_seconds:
@@ -380,11 +382,34 @@ class BreakScheduler:
         if self._active_seconds_since_break[BreakType.MICRO] >= self._configs[BreakType.MICRO].interval_seconds:
             return BreakType.MICRO
         
-        # Check hydration
+        # Check hydration - but only if daily goal is NOT met
         if self._active_seconds_since_break[BreakType.HYDRATION] >= self._configs[BreakType.HYDRATION].interval_seconds:
+            # Check if hydration goal is already achieved today
+            if self._is_hydration_goal_met():
+                # Goal met - silently reset timer, no reminder needed
+                self._active_seconds_since_break[BreakType.HYDRATION] = 0
+                import sys
+                print("[Scheduler] Hydration goal met - skipping reminder", file=sys.stderr, flush=True)
+                return None
             return BreakType.HYDRATION
         
         return None
+    
+    def _is_hydration_goal_met(self) -> bool:
+        """
+        Check if the daily hydration goal has been met.
+        
+        Returns:
+            True if total water intake today >= water_goal setting
+        """
+        try:
+            db = get_database()
+            total_today = db.get_hydration_today()
+            goal = int(db.get_setting("water_goal", "2000"))
+            return total_today >= goal
+        except Exception:
+            # On any error, don't suppress - let the reminder through
+            return False
     
     def complete_break(self, break_type: Optional[BreakType] = None) -> None:
         """
@@ -535,6 +560,24 @@ class BreakScheduler:
             
             import sys
             print("[Scheduler] Session ended - all timers reset", file=sys.stderr, flush=True)
+    
+    def reset_all_timers(self) -> None:
+        """
+        Reset all break timers to 0 WITHOUT changing session state.
+        
+        Use for: returning from long breaks (lunch) where you want fresh
+        timers but want to keep the session active. Unlike end_session(),
+        this preserves the ACTIVE state.
+        """
+        with self._lock:
+            for bt in BreakType:
+                self._active_seconds_since_break[bt] = 0
+                self._last_break_time[bt] = time.time()
+            self._active_time_seconds = 0
+            self._pending_break = None
+            
+            import sys
+            print("[Scheduler] All timers reset (session state preserved)", file=sys.stderr, flush=True)
     
     def get_session_state(self) -> str:
         """Get the current session state as a string."""

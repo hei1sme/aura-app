@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{
-    AppHandle, Emitter, Manager, State,
+    AppHandle, Emitter, Manager, State, PhysicalPosition,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
@@ -264,6 +264,60 @@ async fn end_session(app: AppHandle) -> Result<(), String> {
     send_to_sidecar(app, cmd).await
 }
 
+// ===== SCHEDULE RULES COMMANDS =====
+
+/// Get all schedule rules
+#[tauri::command]
+async fn get_schedule_rules(app: AppHandle) -> Result<(), String> {
+    let cmd = serde_json::json!({ "cmd": "get_schedule_rules" });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Add a new schedule rule
+#[tauri::command]
+async fn add_schedule_rule(app: AppHandle, time: String, action: String, days: Vec<String>, title: Option<String>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "add_schedule_rule",
+        "time": time,
+        "action": action,
+        "days": days,
+        "title": title.unwrap_or_default()
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Update an existing schedule rule
+#[tauri::command]
+async fn update_schedule_rule(app: AppHandle, id: i32, time: String, action: String, days: Vec<String>, enabled: bool, title: Option<String>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "update_schedule_rule",
+        "id": id,
+        "time": time,
+        "action": action,
+        "days": days,
+        "enabled": enabled,
+        "title": title.unwrap_or_default()
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Delete a schedule rule
+#[tauri::command]
+async fn delete_schedule_rule(app: AppHandle, id: i32) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "delete_schedule_rule",
+        "id": id
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Reset all break timers without changing session state
+#[tauri::command]
+async fn reset_all_timers(app: AppHandle) -> Result<(), String> {
+    let cmd = serde_json::json!({ "cmd": "reset_all_timers" });
+    send_to_sidecar(app, cmd).await
+}
+
 /// Helper function to write command to sidecar stdin
 fn write_to_sidecar(app: &AppHandle, command: serde_json::Value) {
     if let Some(state) = app.try_state::<SidecarState>() {
@@ -457,6 +511,45 @@ fn start_sidecar(app: &AppHandle) {
                                         }
                                     });
                                 }
+                            } else if sidecar_event.event_type == "schedule_warning" {
+                                println!("[Aura] Schedule warning! Showing notification window...");
+                                
+                                if let Some(window) = app_for_events.get_webview_window("notification") {
+                                    // Calculate position (Bottom-Right)
+                                    let monitor = window.current_monitor().ok().flatten()
+                                        .or_else(|| window.primary_monitor().ok().flatten());
+                                        
+                                    if let Some(monitor) = monitor {
+                                        let screen_size = monitor.size();
+                                        // Hardcoded window size (must match tauri.conf.json)
+                                        let window_width = 280;
+                                        let window_height = 320;
+                                        let padding = 20;
+                                        
+                                        // Calculate position
+                                        let x = (screen_size.width as i32) - window_width - padding;
+                                        let y = (screen_size.height as i32) - window_height - padding;
+                                        
+                                        let _ = window.set_position(PhysicalPosition::new(x, y));
+                                    }
+                                    
+                                    let _ = window.show();
+                                    // Use set_always_on_top to ensure visibility
+                                    let _ = window.set_always_on_top(true);
+                                    
+                                    // Emit event with data
+                                    let event_data = sidecar_event.data.clone();
+                                    let app_clone = app_for_events.clone();
+                                    tauri::async_runtime::spawn(async move {
+                                        // Small delay for frontend init
+                                        tokio::time::sleep(std::time::Duration::from_millis(800)).await;
+                                        if let Some(win) = app_clone.get_webview_window("notification") {
+                                            if let Some(data) = event_data {
+                                                let _ = win.emit("show-schedule-warning", data);
+                                            }
+                                        }
+                                    });
+                                }
                             }
                             
                             let _ = app_for_events.emit(&event_name, sidecar_event);
@@ -518,6 +611,44 @@ async fn is_autostart_enabled(app: AppHandle) -> Result<bool, String> {
     app.autolaunch().is_enabled().map_err(|e| e.to_string())
 }
 
+/// Debug command to show notification window
+#[tauri::command]
+fn debug_notification(app: AppHandle) {
+    if let Some(window) = app.get_webview_window("notification") {
+        // Position logic
+        let monitor = window.current_monitor().ok().flatten()
+            .or_else(|| window.primary_monitor().ok().flatten());
+            
+        if let Some(monitor) = monitor {
+            let screen_size = monitor.size();
+            let window_width = 280;
+            let window_height = 320;
+            let padding = 20;
+            let x = (screen_size.width as i32) - window_width - padding;
+            let y = (screen_size.height as i32) - window_height - padding;
+            let _ = window.set_position(PhysicalPosition::new(x, y));
+        }
+        
+        let _ = window.show();
+        let _ = window.set_always_on_top(true);
+        let _ = window.set_focus();
+        
+        // Spawn async task to wait and emit, preventing main thread block
+        let window_clone = window.clone();
+        tauri::async_runtime::spawn(async move {
+            // Small delay to ensure frontend is ready
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            
+            // Emit dummy data
+            let _ = window_clone.emit("show-schedule-warning", serde_json::json!({
+                "title": "Debug Test Warning",
+                "action": "pause",
+                "seconds_remaining": 60
+            }));
+        });
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -547,6 +678,7 @@ pub fn run() {
             export_data,
             show_overlay,
             hide_overlay,
+            debug_notification,
             trigger_test_break,
             get_pending_break,
             clear_pending_break,
@@ -558,6 +690,12 @@ pub fn run() {
             pause_session,
             resume_session,
             end_session,
+            // Schedule rules
+            get_schedule_rules,
+            add_schedule_rule,
+            update_schedule_rule,
+            delete_schedule_rule,
+            reset_all_timers,
         ])
         .setup(|app| {
             // Check if started with --minimized flag (autostart at system boot)
