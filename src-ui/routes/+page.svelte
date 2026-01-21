@@ -254,7 +254,7 @@
   <header class="flex items-center justify-between mb-6 animate-fade-in">
     <div>
       <h1 class="text-3xl font-light tracking-tight flex items-center gap-3">
-        <span class="text-4xl">🌟</span>
+        <img src="/logo.png" alt="Aura" class="w-10 h-10 object-contain" />
         Aura
       </h1>
       <p class="text-sm opacity-60 ml-12">
@@ -271,12 +271,13 @@
       <!-- One-Click Pause/Resume Toggle -->
       <button
         class="btn btn-sm gap-2 transition-all {$isPaused
-          ? 'btn-success'
-          : 'btn-ghost hover:btn-warning'}"
+          ? 'btn-success hover:shadow-lg hover:shadow-cyan-500/30'
+          : 'btn-ghost hover:btn-warning hover:shadow-lg hover:shadow-purple-500/30'}"
         on:click={togglePauseResume}
         title={$isPaused
           ? "Click to resume reminders"
           : "Click to pause for 30 minutes"}
+        style={$isPaused ? "" : "border: 1px solid rgba(139, 92, 246, 0.3);"}
       >
         {#if $isPaused}
           <svg

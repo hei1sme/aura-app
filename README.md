@@ -1,8 +1,7 @@
+<!-- markdownlint-disable MD033 -->
 <div align="center">
 
-<img src="assets/aura-logo.png" alt="Aura Logo" width="120" style="border-radius: 20px;">
-
-# 🌿 Aura
+<img src="assets/Aura-logo-text.png" alt="Aura Logo" width="200">
 
 ### The Intelligent Wellness Companion for Developers
 
@@ -36,7 +35,7 @@
 
 <div align="center">
 
-<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/analytics_dashboard_hero_1768995125280.png" width="80%">
+<img src="assets/AnalyticsDashboard.png" width="80%">
 
 </div>
 
@@ -106,7 +105,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 <tr>
 <td width="50%" align="center">
 
-<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/session_hub_interface_1768995405502.png" width="100%">
+<img src="assets/SessionHub.png" width="100%">
 
 **Session Hub**  
 <sub>Your command center for work sessions</sub>
@@ -114,7 +113,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 </td>
 <td width="50%" align="center">
 
-<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/analytics_dashboard_hero_1768995125280.png" width="100%">
+<img src="assets/AnalyticsDashboard.png" width="100%">
 
 **Analytics Dashboard**  
 <sub>Enterprise-level wellness insights</sub>
@@ -124,7 +123,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 <tr>
 <td width="50%" align="center">
 
-<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/break_reminder_overlay_1768995281718.png" width="80%">
+<img src="assets/SmartOverlay.gif" width="80%">
 
 **Smart Overlay**  
 <sub>Beautiful break notifications</sub>
@@ -132,7 +131,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 </td>
 <td width="50%" align="center">
 
-<img src="assets/SmartOverlay.png" width="100%">
+<img src="assets/Setting.gif" width="100%">
 
 **Settings Interface**  
 <sub>Powerful schedule management</sub>
@@ -405,7 +404,7 @@ We welcome contributions! Please check the [Issues](https://github.com/hei1sme/a
 
 ## 📋 Changelog
 
-See [CHANGELOG_v1.4.0.md](CHANGELOG_v1.4.0.md) for the latest release notes.
+See [CHANGELOG_v1.4.0.md](docs/CHANGELOG_v1.4.0.md) for the latest release notes.
 
 ---
 

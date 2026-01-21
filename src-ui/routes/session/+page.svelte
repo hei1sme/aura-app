@@ -216,7 +216,7 @@
   <!-- Header -->
   <header class="hub-header">
     <div class="logo">
-      <span class="emoji">🌟</span>
+      <img src="/logo.png" alt="Aura" class="logo-icon" />
       <span class="title">Aura</span>
     </div>
     <a href="/settings?from=session" class="settings-btn" aria-label="Settings">
@@ -437,8 +437,10 @@
     gap: 0.5rem;
   }
 
-  .logo .emoji {
-    font-size: 1.5rem;
+  .logo .logo-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
   }
 
   .logo .title {
@@ -485,20 +487,20 @@
     align-items: center;
     gap: 0.5rem;
     padding: 1rem 2rem;
-    background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    background: linear-gradient(135deg, #00ffa3, #00d2ff);
     border: none;
     border-radius: 12px;
-    color: white;
+    color: #0a0a1f;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 15px rgba(0, 255, 163, 0.3);
   }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 8px 25px rgba(0, 255, 163, 0.5);
   }
 
   .btn-primary.btn-large {
@@ -601,7 +603,7 @@
 
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #8b5cf6, #6366f1);
+    background: linear-gradient(90deg, #00ffa3, #00d2ff);
     border-radius: 2px;
     transition: width 1s linear;
   }
@@ -638,11 +640,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(
-      135deg,
-      rgba(139, 92, 246, 0.2),
-      rgba(99, 102, 241, 0.2)
-    );
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 50%;
   }
 
@@ -659,7 +657,7 @@
     right: 0;
     bottom: 0;
     border-radius: 50%;
-    border: 2px solid rgba(139, 92, 246, 0.5);
+    border: 2px solid rgba(0, 255, 163, 0.5);
     animation: pulse 2s infinite;
   }
 
@@ -680,7 +678,7 @@
   }
 
   .btn-glow {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+    box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
     animation: glow-pulse 3s infinite;
   }
 
@@ -701,13 +699,13 @@
 
   @keyframes glow-pulse {
     0% {
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+      box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
     }
     50% {
-      box-shadow: 0 0 30px rgba(139, 92, 246, 0.7);
+      box-shadow: 0 0 30px rgba(0, 255, 163, 0.7);
     }
     100% {
-      box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+      box-shadow: 0 0 20px rgba(0, 255, 163, 0.4);
     }
   }
 
@@ -717,15 +715,15 @@
   @keyframes breathe {
     0% {
       transform: scale(1);
-      box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+      box-shadow: 0 0 0 rgba(255, 255, 255, 0);
     }
     50% {
       transform: scale(1.05);
-      box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
     }
     100% {
       transform: scale(1);
-      box-shadow: 0 0 0 rgba(139, 92, 246, 0);
+      box-shadow: 0 0 0 rgba(255, 255, 255, 0);
     }
   }
 
@@ -734,8 +732,8 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.35rem 1rem;
-    background: rgba(139, 92, 246, 0.15);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 9999px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -758,8 +756,8 @@
     align-items: center;
     gap: 0.4rem;
     padding: 0.2rem 0.6rem;
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 9999px;
     font-size: 0.75rem;
     font-weight: 500;
@@ -788,7 +786,7 @@
     margin-bottom: 0.25rem;
     font-feature-settings: "tnum";
     font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+    text-shadow: 0 0 20px rgba(0, 255, 163, 0.2);
     letter-spacing: -1px;
     z-index: 10;
   }
@@ -949,7 +947,7 @@
     left: 50%;
     transform: translateX(-50%);
     background: rgba(15, 23, 42, 0.9);
-    border: 1px solid rgba(139, 92, 246, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
     padding: 0.75rem 1rem;
     border-radius: 12px;

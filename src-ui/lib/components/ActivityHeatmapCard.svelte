@@ -55,13 +55,21 @@
     })();
 
     function getIntensityColor(intensity: number): string {
-        if (intensity === 0) return "rgba(255,255,255,0.05)";
-        // Scale 0-1 to opacity of theme color
-        // Determine color based on intensity level?
-        // Low = Blue, Med = Green, High = Orange? Or just opacity of 'eye-care'
-        // Let's use opacity of var(--aura-eye-care)
-        const opacity = Math.min(1, Math.max(0.1, intensity * 0.8 + 0.1));
-        return `rgba(74, 222, 128, ${opacity})`; // aura-eye-care is rgb(74, 222, 128)
+        if (intensity === 0) return "rgba(255, 255, 255, 0.05)";
+        // Purple to Cyan gradient based on intensity
+        // Low intensity = Purple, High intensity = Cyan
+        const opacity = Math.min(1, Math.max(0.15, intensity * 0.85 + 0.15));
+
+        if (intensity < 0.33) {
+            // Low: Emerald/Teal
+            return `rgba(16, 185, 129, ${opacity * 0.5})`;
+        } else if (intensity < 0.66) {
+            // Medium: Brighter Emerald
+            return `rgba(16, 185, 129, ${opacity * 0.75})`;
+        } else {
+            // High: Neon Mint Green (spec color #00ffa3)
+            return `rgba(0, 255, 163, ${opacity})`;
+        }
     }
 </script>
 
@@ -129,8 +137,8 @@
 
 <style>
     .stats-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 1rem;
         padding: 1.25rem;
         min-height: 200px;
@@ -139,5 +147,14 @@
     .grid-cols-24 {
         display: grid;
         grid-template-columns: repeat(24, minmax(0, 1fr));
+    }
+
+    .rounded-sm {
+        border-radius: 2px;
+    }
+
+    .rounded-sm:hover {
+        border-radius: 4px;
+        transform: scale(1.1);
     }
 </style>

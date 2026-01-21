@@ -33,18 +33,19 @@
         .reduce((acc, c) => acc + c.percentage, 0);
 
     function getColorForCategory(name: string, index: number): string {
-        // Aura Brand Colors
+        // New vibrant purple-cyan palette
         const colors = [
-            "var(--aura-eye-care)", // Green
-            "var(--aura-stretch)", // Orange
-            "var(--aura-accent)", // Blue/Purple
-            "#e0e0e0", // White-ish
-            "#666666", // Grey
+            "#8B5CF6", // Purple
+            "#3B82F6", // Blue
+            "#14B8A6", // Cyan
+            "#F59E0B", // Amber
+            "#EC4899", // Pink
         ];
         // Specific mapping if desired
-        if (name === "Code") return "var(--aura-eye-care)";
-        if (name === "Web") return "var(--aura-accent)";
-        if (name === "Game") return "var(--aura-stretch)";
+        if (name === "Web") return colors[0]; // Purple
+        if (name === "Productivity") return colors[2]; // Cyan
+        if (name === "Communication") return colors[3]; // Amber
+        if (name === "Other") return colors[1]; // Blue
 
         return colors[index % colors.length];
     }
@@ -187,9 +188,13 @@
 
 <style>
     .stats-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 1rem;
         padding: 1.25rem;
+    }
+
+    circle {
+        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
     }
 </style>

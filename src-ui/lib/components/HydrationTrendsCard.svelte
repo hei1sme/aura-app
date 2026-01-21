@@ -249,29 +249,35 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        padding: 0.4rem 0.6rem;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 0.5rem;
+        padding: 0.6rem 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.75rem;
         transition: all 0.2s ease;
         cursor: pointer;
         width: 100%;
         text-align: left;
+        position: relative;
     }
 
     .quick-btn:hover {
-        background: rgba(59, 130, 246, 0.15);
-        border-color: var(--aura-hydration);
-        transform: translateX(2px);
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.4);
+        transform: translateX(3px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .quick-btn:active {
+        transform: translateX(3px) scale(0.98);
     }
 
     .trend-chart-container {
         display: flex;
         flex-direction: column;
-        background: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.35);
         border-radius: 0.75rem;
         padding: 0.75rem;
-        border: 1px solid rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .chart-header {
@@ -286,7 +292,7 @@
     }
 
     .trend-line {
-        filter: drop-shadow(0 4px 6px rgba(59, 130, 246, 0.2));
+        filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.4));
         animation: drawLine 1s ease-out forwards;
     }
 
@@ -299,5 +305,10 @@
             stroke-dasharray: 1000;
             stroke-dashoffset: 0;
         }
+    }
+
+    .data-point {
+        filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.4));
+        transition: all 0.2s ease;
     }
 </style>

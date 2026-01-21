@@ -184,7 +184,11 @@
         padding-top: 1rem;
         padding-bottom: 0.5rem;
         /* Optional rule line */
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.15);
+        border-radius: 0.5rem;
+        padding: 1rem 0.5rem 0.5rem;
+        margin-bottom: 0.5rem;
     }
 
     .bar-group {
@@ -202,7 +206,7 @@
         max-width: 24px;
         height: 100px; /* Max height for bars */
         position: relative;
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 4px;
         overflow: hidden;
     }
@@ -220,18 +224,21 @@
 
     /* Stacked look touches */
     .bar-completed {
-        background-color: var(--aura-eye-care);
+        background: linear-gradient(180deg, #14b8a6, #10b981);
         z-index: 10;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
     }
     .bar-snoozed {
-        background-color: var(--aura-stretch);
+        background: linear-gradient(180deg, #f59e0b, #d97706);
         z-index: 9;
-        opacity: 0.7;
+        opacity: 0.85;
+        box-shadow: 0 0 6px rgba(245, 158, 11, 0.3);
     }
     .bar-skipped {
-        background-color: var(--color-error);
+        background: linear-gradient(180deg, #ef4444, #dc2626);
         z-index: 8;
-        opacity: 0.7;
+        opacity: 0.75;
+        box-shadow: 0 0 6px rgba(239, 68, 68, 0.3);
     }
 
     .day-label {

@@ -715,6 +715,17 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
+        // Single instance: if another instance is launched, focus existing window
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            // Focus the session window when second instance tries to launch
+            if let Some(window) = app.get_webview_window("session") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            } else if let Some(window) = app.get_webview_window("main") {
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .manage(SidecarState {
             is_running: Mutex::new(false),
             child: Mutex::new(None),
