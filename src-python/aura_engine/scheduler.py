@@ -104,6 +104,13 @@ class BreakScheduler:
         # Pending break (waiting for user response)
         self._pending_break: Optional[BreakType] = None
         
+        # Snooze tracking: keep ALL timers frozen during snooze period
+        # This prevents the cascade bug where other breaks trigger immediately after snooze
+        self._snooze_until: Optional[float] = None  # Wall-clock time when snooze expires
+        self._snooze_break_type: Optional[BreakType] = None  # Which break was snoozed
+        self._snooze_duration_active_seconds: float = 0  # Snooze duration in active-time seconds
+        self._snooze_active_seconds_accumulated: float = 0  # Active seconds accumulated during snooze
+        
         # Timer mode: 'active' (only counts active time) or 'wall-clock' (counts real time)
         self._timer_mode = 'active'
         self._load_timer_mode()
@@ -309,6 +316,40 @@ class BreakScheduler:
             # pause ALL timers. This prevents a cascade of breaks piling up
             # if the user is away from the computer.
             if self._pending_break is not None:
+                # Check if we're in a snooze period
+                if self._snooze_until is not None:
+                    # Snooze mode: track active time during snooze
+                    if self._timer_mode == 'wall-clock':
+                        should_accumulate_snooze = True
+                    else:
+                        should_accumulate_snooze = is_active
+                    
+                    if should_accumulate_snooze:
+                        self._snooze_active_seconds_accumulated += delta_seconds
+                    
+                    # Check if snooze has expired (based on timer mode)
+                    snooze_expired = False
+                    if self._timer_mode == 'wall-clock':
+                        # Wall-clock mode: snooze expires based on real time
+                        snooze_expired = time.time() >= self._snooze_until
+                    else:
+                        # Active-time mode: snooze expires based on accumulated active time
+                        snooze_expired = self._snooze_active_seconds_accumulated >= self._snooze_duration_active_seconds
+                    
+                    if snooze_expired:
+                        # Snooze expired - re-trigger the snoozed break
+                        snoozed_break = self._snooze_break_type
+                        self._snooze_until = None
+                        self._snooze_break_type = None
+                        self._snooze_active_seconds_accumulated = 0
+                        self._snooze_duration_active_seconds = 0
+                        
+                        # Re-trigger callback for the snoozed break
+                        if snoozed_break is not None and self.on_break_due:
+                            import sys
+                            print(f"[Scheduler] Snooze expired - re-triggering {snoozed_break.value} break", file=sys.stderr, flush=True)
+                            self.on_break_due(snoozed_break, self._configs[snoozed_break])
+                    
                 return None  # All timers frozen until user handles pending break
             
             # Timer mode determines when to accumulate time:
@@ -438,26 +479,40 @@ class BreakScheduler:
             # Reset overall active time counter
             self._active_time_seconds = 0
             
+            # Clear snooze state (in case break was completed after snooze)
+            self._snooze_until = None
+            self._snooze_break_type = None
+            self._snooze_active_seconds_accumulated = 0
+            self._snooze_duration_active_seconds = 0
+            
             self._pending_break = None
     
     def snooze_break(self, minutes: int = 5) -> None:
         """
         Snooze the current pending break.
         
+        FIX v1.3.1: Keep ALL timers frozen during snooze period to prevent
+        cascade bug where other breaks trigger immediately after snooze.
+        
         Args:
             minutes: How long to snooze (default 5 minutes)
         """
         with self._lock:
             if self._pending_break is not None:
-                # Subtract snooze time from accumulated active seconds
-                # This effectively delays the next break by snooze duration of ACTIVE time
                 snooze_seconds = minutes * 60
-                self._active_seconds_since_break[self._pending_break] = max(
-                    0, 
-                    self._configs[self._pending_break].interval_seconds - snooze_seconds
-                )
-            
-            self._pending_break = None
+                
+                # CRITICAL FIX: Keep _pending_break set during snooze
+                # This freezes ALL timers until snooze expires
+                self._snooze_break_type = self._pending_break
+                self._snooze_until = time.time() + snooze_seconds
+                self._snooze_duration_active_seconds = snooze_seconds
+                self._snooze_active_seconds_accumulated = 0
+                
+                # DO NOT clear _pending_break - keep all timers frozen
+                # The break will re-trigger when snooze expires in update()
+                
+                import sys
+                print(f"[Scheduler] {self._pending_break.value} snoozed for {minutes} min - ALL timers frozen", file=sys.stderr, flush=True)
     
     def skip_break(self) -> None:
         """Skip the current pending break and reset timer to wait for next full interval."""
@@ -467,6 +522,13 @@ class BreakScheduler:
                 # This is the same as complete_break() but without the positive ML label
                 self._active_seconds_since_break[self._pending_break] = 0
                 self._last_break_time[self._pending_break] = time.time()
+            
+            # Clear snooze state (in case break was skipped after snooze)
+            self._snooze_until = None
+            self._snooze_break_type = None
+            self._snooze_active_seconds_accumulated = 0
+            self._snooze_duration_active_seconds = 0
+            
             self._pending_break = None
     
     def pause(self, minutes: Optional[int] = None) -> None:
@@ -555,6 +617,12 @@ class BreakScheduler:
             self._active_time_seconds = 0
             self._pending_break = None
             
+            # Clear snooze state
+            self._snooze_until = None
+            self._snooze_break_type = None
+            self._snooze_active_seconds_accumulated = 0
+            self._snooze_duration_active_seconds = 0
+            
             self._session_state = SessionState.IDLE
             self._save_session_state()
             
@@ -576,6 +644,12 @@ class BreakScheduler:
             self._active_time_seconds = 0
             self._pending_break = None
             
+            # Clear snooze state
+            self._snooze_until = None
+            self._snooze_break_type = None
+            self._snooze_active_seconds_accumulated = 0
+            self._snooze_duration_active_seconds = 0
+            
             import sys
             print("[Scheduler] All timers reset (session state preserved)", file=sys.stderr, flush=True)
     
@@ -591,12 +665,23 @@ class BreakScheduler:
             Dictionary with scheduler state
         """
         with self._lock:
+            # Calculate snooze remaining time
+            snooze_remaining = 0
+            if self._snooze_until is not None:
+                if self._timer_mode == 'wall-clock':
+                    snooze_remaining = max(0, int(self._snooze_until - time.time()))
+                else:
+                    snooze_remaining = max(0, int(self._snooze_duration_active_seconds - self._snooze_active_seconds_accumulated))
+            
             status = {
                 "session_state": self._session_state.value,
                 "paused": self._is_paused(),
                 "pause_until": self._pause_until,
                 "active_time_seconds": int(self._active_time_seconds),
                 "pending_break": self._pending_break.value if self._pending_break else None,
+                "snooze_active": self._snooze_until is not None,
+                "snooze_break_type": self._snooze_break_type.value if self._snooze_break_type else None,
+                "snooze_remaining_seconds": snooze_remaining,
                 "breaks": {}
             }
             
