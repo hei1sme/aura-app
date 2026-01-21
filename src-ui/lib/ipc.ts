@@ -78,6 +78,19 @@ export interface TrainingStats {
   message: string;
 }
 
+export type FocusStats = Record<string, number>;
+
+export interface ActivityHeatmapInfo {
+  date: string;
+  hour: number;
+  intensity: number;
+  details: {
+    kpm: number;
+    mouse: number;
+    samples: number;
+  };
+}
+
 export interface SidecarEvent<T = unknown> {
   type: string;
   data?: T;
@@ -190,6 +203,34 @@ export async function getBreakStats(days: number = 7): Promise<void> {
  */
 export async function getBreaksToday(): Promise<void> {
   return invoke('get_breaks_today');
+}
+
+/**
+ * Get break history for the last N days (daily breakdown)
+ */
+export async function getBreakHistory(days: number = 7): Promise<void> {
+  return invoke('get_break_history', { days });
+}
+
+/**
+ * Get hydration history for the last N days
+ */
+export async function getHydrationHistory(days: number = 7): Promise<void> {
+  return invoke('get_hydration_history', { days });
+}
+
+/**
+ * Get focus distribution stats
+ */
+export async function getFocusStats(days: number = 7): Promise<void> {
+  return invoke('get_focus_stats', { days });
+}
+
+/**
+ * Get activity heatmap data
+ */
+export async function getActivityHeatmap(days: number = 7): Promise<void> {
+  return invoke('get_activity_heatmap', { days });
 }
 
 
@@ -434,6 +475,25 @@ export function onBreakCompleted(callback: EventCallback<void>): Promise<Unliste
 }
 
 /**
+ * Listen to break snoozed events
+ */
+export function onBreakSnoozed(callback: EventCallback<{ minutes: number }>): Promise<UnlistenFn> {
+  return listen('sidecar-break_snoozed', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<{ minutes: number }>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to break skipped events
+ */
+export function onBreakSkipped(callback: EventCallback<void>): Promise<UnlistenFn> {
+  return listen('sidecar-break_skipped', () => {
+    callback();
+  });
+}
+
+/**
  * Listen to errors from sidecar
  */
 export function onError(callback: EventCallback<{ message: string }>): Promise<UnlistenFn> {
@@ -535,7 +595,7 @@ export function onScheduleWarning(callback: EventCallback<{ action: string; time
 
 // ===== ANALYTICS EVENT LISTENERS =====
 
-import type { BreakStats, BreakLog } from '$lib/stores/analytics';
+import type { BreakStats, BreakLog, DailyBreakStats, DailyHydration } from '$lib/stores/analytics';
 
 /**
  * Listen to break stats updates
@@ -553,6 +613,46 @@ export function onBreakStats(callback: EventCallback<BreakStats>): Promise<Unlis
 export function onBreaksToday(callback: EventCallback<BreakLog[]>): Promise<UnlistenFn> {
   return listen('sidecar-breaks_today', (event) => {
     const sidecarEvent = event.payload as SidecarEvent<BreakLog[]>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to break history updates
+ */
+export function onBreakHistory(callback: EventCallback<Record<string, DailyBreakStats>>): Promise<UnlistenFn> {
+  return listen('sidecar-break_history', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<Record<string, DailyBreakStats>>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to hydration history updates
+ */
+export function onHydrationHistory(callback: EventCallback<DailyHydration[]>): Promise<UnlistenFn> {
+  return listen('sidecar-hydration_history', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<DailyHydration[]>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to focus stats updates
+ */
+export function onFocusStats(callback: EventCallback<FocusStats>): Promise<UnlistenFn> {
+  return listen('sidecar-focus_stats', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<FocusStats>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to activity heatmap updates
+ */
+export function onActivityHeatmap(callback: EventCallback<ActivityHeatmapInfo[]>): Promise<UnlistenFn> {
+  return listen('sidecar-activity_heatmap', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<ActivityHeatmapInfo[]>;
     callback(sidecarEvent.data!);
   });
 }

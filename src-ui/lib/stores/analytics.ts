@@ -24,6 +24,13 @@ export interface BreakStats {
 
 export const breakStats = writable<BreakStats>({});
 
+// Daily break history for bar chart (date -> break types -> stats)
+export interface DailyBreakStats {
+    [breakType: string]: BreakTypeStats;
+}
+
+export const breakHistory = writable<Record<string, DailyBreakStats>>({});
+
 // Today's break history (from get_breaks_today)
 export interface BreakLog {
     id: number;
@@ -42,7 +49,7 @@ export const breaksToday = writable<BreakLog[]>([]);
 export interface DailyHydration {
     date: string;
     amount_ml: number;
-    goal_ml: number;
+    goal_ml?: number; // Optional, might be inferred from settings
 }
 
 export const hydrationHistory = writable<DailyHydration[]>([]);
@@ -50,6 +57,10 @@ export const hydrationHistory = writable<DailyHydration[]>([]);
 // Update functions
 export function updateBreakStats(stats: BreakStats): void {
     breakStats.set(stats);
+}
+
+export function updateBreakHistory(history: Record<string, DailyBreakStats>): void {
+    breakHistory.set(history);
 }
 
 export function updateBreaksToday(breaks: BreakLog[]): void {
@@ -85,4 +96,29 @@ export function getComplianceRate(stats: BreakStats): number {
     }
 
     return total > 0 ? Math.round((completed / total) * 100) : 100;
+}
+
+// Focus Stats (App Categories)
+export type FocusStats = Record<string, number>;
+export const focusStats = writable<FocusStats>({});
+
+// Activity Heatmap
+export interface ActivityHeatmapInfo {
+    date: string;
+    hour: number;
+    intensity: number;
+    details: {
+        kpm: number;
+        mouse: number;
+        samples: number;
+    };
+}
+export const activityHeatmap = writable<ActivityHeatmapInfo[]>([]);
+
+export function updateFocusStats(stats: FocusStats): void {
+    focusStats.set(stats);
+}
+
+export function updateActivityHeatmap(heatmap: ActivityHeatmapInfo[]): void {
+    activityHeatmap.set(heatmap);
 }

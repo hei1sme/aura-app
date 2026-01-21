@@ -337,6 +337,46 @@ async fn get_breaks_today(app: AppHandle) -> Result<(), String> {
     send_to_sidecar(app, cmd).await
 }
 
+/// Get break history for the last N days (daily breakdown)
+#[tauri::command]
+async fn get_break_history(app: AppHandle, days: Option<i32>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "get_break_history",
+        "days": days.unwrap_or(7)
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Get hydration history for the last N days
+#[tauri::command]
+async fn get_hydration_history(app: AppHandle, days: Option<i32>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "get_hydration_history",
+        "days": days.unwrap_or(7)
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Get focus distribution stats
+#[tauri::command]
+async fn get_focus_stats(app: AppHandle, days: Option<i32>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "get_focus_stats",
+        "days": days.unwrap_or(7)
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Get activity heatmap data
+#[tauri::command]
+async fn get_activity_heatmap(app: AppHandle, days: Option<i32>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "get_activity_heatmap",
+        "days": days.unwrap_or(7)
+    });
+    send_to_sidecar(app, cmd).await
+}
+
 
 /// Helper function to write command to sidecar stdin
 fn write_to_sidecar(app: &AppHandle, command: serde_json::Value) {
@@ -719,6 +759,10 @@ pub fn run() {
             // Analytics
             get_break_stats,
             get_breaks_today,
+            get_break_history,
+            get_hydration_history,
+            get_focus_stats,
+            get_activity_heatmap,
         ])
         .setup(|app| {
             // Check if started with --minimized flag (autostart at system boot)

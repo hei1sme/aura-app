@@ -112,7 +112,7 @@ class BreakScheduler:
         self._snooze_active_seconds_accumulated: float = 0  # Active seconds accumulated during snooze
         
         # Timer mode: 'active' (only counts active time) or 'wall-clock' (counts real time)
-        self._timer_mode = 'active'
+        self._timer_mode = 'wall-clock'  # Default to wall-clock for simpler UX
         self._load_timer_mode()
         
         # Track ACTIVE seconds since last break (cumulative, pauses when idle)

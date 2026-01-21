@@ -1,7 +1,7 @@
 <!--
   HydrationTrendsCard.svelte - Hydration Tracking with Trends
   
-  Shows current hydration + 7-day trend chart + quick-add buttons
+  Shows current hydration + 7-day trend line chart + quick-add buttons
 -->
 <script lang="ts">
     import ProgressRing from "./ProgressRing.svelte";
@@ -29,60 +29,100 @@
         }
     }
 
-    // Day labels for the chart
-    const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
+    // Helper to format YYYY-MM-DD
+    function formatDateKey(date: Date): string {
+        return date.toISOString().split("T")[0];
+    }
 
-    // Generate mock week data if no history (will be replaced by real data)
-    $: weekData =
-        $hydrationHistory.length > 0
-            ? $hydrationHistory.slice(-7)
-            : Array(7)
-                  .fill(null)
-                  .map((_, i) => ({
-                      date: "",
-                      amount_ml: i === 6 ? $hydrationStatus.total_today_ml : 0,
-                      goal_ml: $hydrationStatus.goal_ml,
-                  }));
+    function getDayLabel(date: Date): string {
+        return date.toLocaleDateString("en-US", { weekday: "narrow" });
+    }
 
-    // Calculate bar heights
-    $: maxAmount = Math.max(...weekData.map((d) => d.goal_ml), 2000);
+    // Dynamic day labels
+    $: dayLabels = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return getDayLabel(d);
+    });
+
+    // Generate real week data from store
+    $: weekData = Array.from({ length: 7 }).map((_, i) => {
+        const isToday = i === 6;
+        if (isToday) {
+            return {
+                val: $hydrationStatus.total_today_ml,
+                goal: $hydrationStatus.goal_ml,
+            };
+        }
+
+        const daysAgo = 6 - i;
+        const d = new Date();
+        d.setDate(d.getDate() - daysAgo);
+        const dateKey = formatDateKey(d);
+
+        // Lookup in history
+        const dayRecord = $hydrationHistory.find((h) => h.date === dateKey);
+
+        return {
+            val: dayRecord ? dayRecord.amount_ml : 0,
+            goal: $hydrationStatus.goal_ml, // Assuming constant goal for simplicity
+        };
+    });
+
+    // Chart Dimensions
+    const height = 80;
+    const width = 180;
+    const padding = 5;
+
+    $: maxVal = Math.max(
+        ...weekData.map((d) => d.val),
+        ...weekData.map((d) => d.goal),
+        2500,
+    );
+
+    // Scale functions
+    $: xScale = (index: number) =>
+        (index / (weekData.length - 1)) * (width - 2 * padding) + padding;
+    $: yScale = (val: number) =>
+        height - (val / maxVal) * (height - 2 * padding) - padding;
+
+    // Generate SVG path for the line
+    $: pathD = weekData
+        .map((d, i) => {
+            const x = xScale(i);
+            const y = yScale(d.val);
+            return `${i === 0 ? "M" : "L"} ${x} ${y}`;
+        })
+        .join(" ");
+
+    // Area fill path (closes the loop for gradient)
+    $: areaD = `${pathD} L ${xScale(weekData.length - 1)} ${height} L ${xScale(0)} ${height} Z`;
+
+    // Goal line path
+    $: goalY = yScale(2000); // Assume 2000 is goal for visual simplicity if varying
 </script>
 
 <div class="bento-item hydration-card theme-hydration">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-2">
         <h3 class="text-label flex items-center gap-2">
             <span class="text-base">💧</span>
             Hydration
         </h3>
         <div class="text-right">
-            <span class="text-sm font-light text-info"
-                >{$hydrationStatus.total_today_ml}ml</span
+            <span class="text-2xl font-light text-info"
+                >{$hydrationStatus.total_today_ml}</span
             >
-            <span class="text-xs opacity-50">
-                / {$hydrationStatus.goal_ml}ml</span
-            >
+            <span class="text-sm font-light text-info opacity-70">ml</span>
+            <div class="text-xs opacity-50 -mt-1">
+                Goal: <span class="font-medium">{$hydrationStatus.goal_ml}</span
+                >
+            </div>
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-4">
-        <!-- Left: Progress ring + Quick add -->
-        <div class="flex flex-col items-center gap-3">
-            <div class="ring-wrapper">
-                <ProgressRing
-                    progress={$hydrationPercent}
-                    size={80}
-                    strokeWidth={6}
-                    color="var(--aura-hydration)"
-                >
-                    <div class="text-center">
-                        <span class="text-xl font-light text-info"
-                            >{$hydrationPercent}</span
-                        >
-                        <span class="text-xs opacity-60">%</span>
-                    </div>
-                </ProgressRing>
-            </div>
-
+    <div class="flex gap-4">
+        <!-- Left: Quick Add Buttons (Stacked) -->
+        <div class="flex flex-col gap-2 w-24 flex-shrink-0">
             <div class="quick-add-grid">
                 {#each quickAmounts as item}
                     <button
@@ -97,36 +137,95 @@
                     </button>
                 {/each}
             </div>
+
+            <!-- Mini Progress Stat -->
+            <div class="text-center mt-1">
+                <div class="text-xs opacity-60">Daily Progress</div>
+                <div class="font-medium text-info">{$hydrationPercent}%</div>
+            </div>
         </div>
 
-        <!-- Right: Weekly trend chart -->
-        <div class="trend-chart">
-            <div class="text-xs opacity-50 mb-2 text-center">This Week</div>
-            <div class="chart-bars">
-                {#each weekData as day, i}
-                    {@const heightPercent =
-                        maxAmount > 0 ? (day.amount_ml / maxAmount) * 100 : 0}
-                    {@const isToday = i === 6}
-                    {@const reachedGoal = day.amount_ml >= day.goal_ml}
-                    <div class="bar-column">
-                        <div class="bar-wrapper">
-                            <div
-                                class="bar"
-                                class:today={isToday}
-                                class:reached={reachedGoal}
-                                style="height: {Math.max(heightPercent, 4)}%"
-                            ></div>
-                            <!-- Goal line -->
-                            <div
-                                class="goal-line"
-                                style="bottom: {(day.goal_ml / maxAmount) *
-                                    100}%"
-                            ></div>
-                        </div>
-                        <span class="day-label" class:today={isToday}
-                            >{dayLabels[i]}</span
-                        >
-                    </div>
+        <!-- Right: Trend Chart -->
+        <div class="trend-chart-container flex-1">
+            <div class="chart-header">
+                <span class="text-[10px] opacity-40 uppercase tracking-wider"
+                    >7-Day Trend</span
+                >
+            </div>
+
+            <svg
+                viewBox="0 0 {width} {height}"
+                class="trend-svg"
+                preserveAspectRatio="none"
+            >
+                <defs>
+                    <linearGradient
+                        id="hydroGradient"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                    >
+                        <stop
+                            offset="0%"
+                            stop-color="var(--aura-hydration)"
+                            stop-opacity="0.5"
+                        />
+                        <stop
+                            offset="100%"
+                            stop-color="var(--aura-hydration)"
+                            stop-opacity="0.05"
+                        />
+                    </linearGradient>
+                </defs>
+
+                <!-- Goal Line (Dashed) -->
+                <line
+                    x1="0"
+                    y1={goalY}
+                    x2={width}
+                    y2={goalY}
+                    stroke="rgba(255,255,255,0.15)"
+                    stroke-width="1"
+                    stroke-dasharray="3 3"
+                />
+
+                <!-- Area Fill -->
+                <path d={areaD} fill="url(#hydroGradient)" />
+
+                <!-- Trend Line -->
+                <path
+                    d={pathD}
+                    fill="none"
+                    stroke="var(--aura-hydration)"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="trend-line"
+                />
+
+                <!-- Data Points -->
+                {#each weekData as d, i}
+                    <circle
+                        cx={xScale(i)}
+                        cy={yScale(d.val)}
+                        r={i === 6 ? 3 : 2}
+                        fill={i === 6
+                            ? "var(--aura-hydration)"
+                            : "rgba(255,255,255,0.8)"}
+                        class="data-point"
+                    />
+                {/each}
+            </svg>
+
+            <!-- X-Axis Labels -->
+            <div class="flex justify-between mt-1 px-1">
+                {#each dayLabels as day, i}
+                    <span
+                        class="text-[9px] opacity-40 {i === 6
+                            ? 'text-info font-bold opacity-100'
+                            : ''}">{day}</span
+                    >
                 {/each}
             </div>
         </div>
@@ -136,113 +235,69 @@
 <style>
     .hydration-card {
         min-height: 180px;
-    }
-
-    .ring-wrapper {
-        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
     }
 
     .quick-add-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.35rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
     }
 
     .quick-btn {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        gap: 0.125rem;
-        padding: 0.4rem 0.3rem;
+        gap: 0.5rem;
+        padding: 0.4rem 0.6rem;
         background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.05);
         border-radius: 0.5rem;
         transition: all 0.2s ease;
         cursor: pointer;
+        width: 100%;
+        text-align: left;
     }
 
     .quick-btn:hover {
-        background: rgba(59, 130, 246, 0.2);
+        background: rgba(59, 130, 246, 0.15);
         border-color: var(--aura-hydration);
-        transform: translateY(-1px);
+        transform: translateX(2px);
     }
 
-    .quick-btn:active {
-        transform: translateY(0);
-    }
-
-    .quick-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .trend-chart {
+    .trend-chart-container {
         display: flex;
         flex-direction: column;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 255, 255, 0.03);
     }
 
-    .chart-bars {
-        display: flex;
-        gap: 0.25rem;
-        align-items: flex-end;
+    .chart-header {
+        margin-bottom: 0.5rem;
+        text-align: right;
+    }
+
+    .trend-svg {
         flex: 1;
-        min-height: 80px;
-    }
-
-    .bar-column {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .bar-wrapper {
         width: 100%;
-        height: 70px;
-        position: relative;
-        display: flex;
-        align-items: flex-end;
-        justify-content: center;
+        overflow: visible;
     }
 
-    .bar {
-        width: 80%;
-        background: rgba(59, 130, 246, 0.3);
-        border-radius: 2px 2px 0 0;
-        transition:
-            height 0.3s ease,
-            background 0.3s ease;
-        min-height: 2px;
+    .trend-line {
+        filter: drop-shadow(0 4px 6px rgba(59, 130, 246, 0.2));
+        animation: drawLine 1s ease-out forwards;
     }
 
-    .bar.today {
-        background: var(--aura-hydration);
-    }
-
-    .bar.reached {
-        background: var(--aura-eye-care);
-    }
-
-    .goal-line {
-        position: absolute;
-        left: 0;
-        right: 0;
-        height: 1px;
-        background: rgba(255, 255, 255, 0.2);
-        border-style: dashed;
-    }
-
-    .day-label {
-        font-size: 0.6rem;
-        opacity: 0.5;
-        text-transform: uppercase;
-    }
-
-    .day-label.today {
-        opacity: 1;
-        color: var(--aura-hydration);
-        font-weight: 500;
+    @keyframes drawLine {
+        from {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+        }
+        to {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 0;
+        }
     }
 </style>

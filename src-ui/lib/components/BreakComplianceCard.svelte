@@ -1,16 +1,13 @@
-<!--
-  BreakComplianceCard.svelte - Break Compliance Analytics
-  
-  Visualizes break completion rates with donut chart and stats
--->
 <script lang="ts">
     import {
         breakStats,
         breaksToday,
+        breakHistory,
+        type DailyBreakStats,
         getComplianceRate,
     } from "$lib/stores/analytics";
 
-    // Calculate totals across all break types
+    // Calculate overall compliance rate from stats (aggregated)
     $: totalStats = (() => {
         let completed = 0;
         let skipped = 0;
@@ -34,234 +31,213 @@
             ? Math.round((totalStats.completed / totalStats.total) * 100)
             : 100;
 
-    $: completedPercent =
-        totalStats.total > 0
-            ? Math.round((totalStats.completed / totalStats.total) * 100)
-            : 0;
-    $: skippedPercent =
-        totalStats.total > 0
-            ? Math.round((totalStats.skipped / totalStats.total) * 100)
-            : 0;
-    $: snoozedPercent =
-        totalStats.total > 0
-            ? Math.round((totalStats.snoozed / totalStats.total) * 100)
-            : 0;
-
-    // SVG donut chart calculations
-    const size = 120;
-    const strokeWidth = 12;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = 2 * Math.PI * radius;
-
-    $: completedDash = (completedPercent / 100) * circumference;
-    $: skippedDash = (skippedPercent / 100) * circumference;
-    $: snoozedDash = (snoozedPercent / 100) * circumference;
-
-    $: completedOffset = 0;
-    $: skippedOffset = -completedDash;
-    $: snoozedOffset = -(completedDash + skippedDash);
-
     // Today's count
     $: todayCompleted = $breaksToday.filter((b) => b.completed).length;
+    $: todaySkipped = $breaksToday.filter((b) => b.skipped).length;
+    $: todaySnoozed = $breaksToday.filter((b) => b.snoozed).length;
     $: todayTotal = $breaksToday.length;
+
+    // Helper to format YYYY-MM-DD
+    function formatDateKey(date: Date): string {
+        return date.toISOString().split("T")[0];
+    }
+
+    function getDayLabel(date: Date): string {
+        return date.toLocaleDateString("en-US", { weekday: "short" });
+    }
+
+    $: chartData = Array.from({ length: 7 }).map((_, i) => {
+        const daysAgo = 6 - i;
+        const d = new Date();
+        d.setDate(d.getDate() - daysAgo);
+
+        const dateKey = formatDateKey(d);
+        const label = i === 6 ? "TODAY" : getDayLabel(d);
+
+        // If it's today (last item), use real reactive data from breaksToday store
+        // This ensures instant updates when a break is taken/skipped
+        if (i === 6) {
+            return {
+                day: label,
+                completed: todayCompleted,
+                skipped: todaySkipped,
+                snoozed: todaySnoozed,
+                total: todayTotal || 1, // Avoid div by zero visual
+            };
+        }
+
+        // For past days, look up in breakHistory
+        const daysStats = $breakHistory[dateKey];
+
+        let completed = 0;
+        let skipped = 0;
+        let snoozed = 0;
+        let total = 0;
+
+        if (daysStats) {
+            // Sum up across all break types (micro, macro, hydration) for that day
+            for (const stats of Object.values(daysStats)) {
+                completed += stats.completed;
+                skipped += stats.skipped;
+                snoozed += stats.snoozed;
+                total += stats.total;
+            }
+        }
+
+        // Fallback for empty history: effectively 0 height bars
+        if (total === 0) total = 0.1; // tiny value to keep layout but show empty
+
+        return {
+            day: label,
+            completed,
+            skipped,
+            snoozed,
+            total,
+        };
+    });
+
+    $: maxTotal = Math.max(...chartData.map((d) => d.total), 1);
 </script>
 
 <div class="bento-item compliance-card">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex items-center justify-between mb-2">
         <h3 class="text-label flex items-center gap-2">
             <span class="text-base">📊</span>
             Break Compliance
         </h3>
-        <span class="text-xs opacity-50">Last 7 days</span>
+        <div class="text-right">
+            <span
+                class="text-2xl font-light"
+                class:text-success={complianceRate >= 70}
+                class:text-warning={complianceRate >= 40 && complianceRate < 70}
+                class:text-error={complianceRate < 40}>{complianceRate}%</span
+            >
+            <span class="text-xs opacity-50 block -mt-1">Overall Score</span>
+        </div>
     </div>
 
-    <div class="flex items-center gap-6">
-        <!-- Donut Chart -->
-        <div class="chart-container">
-            <svg width={size} height={size} class="donut-chart">
-                <!-- Background circle -->
-                <circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    fill="none"
-                    stroke="rgba(255,255,255,0.1)"
-                    stroke-width={strokeWidth}
-                />
-
-                <!-- Completed segment (green) -->
-                {#if completedPercent > 0}
-                    <circle
-                        cx={size / 2}
-                        cy={size / 2}
-                        r={radius}
-                        fill="none"
-                        stroke="var(--aura-eye-care)"
-                        stroke-width={strokeWidth}
-                        stroke-dasharray="{completedDash} {circumference}"
-                        stroke-dashoffset={completedOffset}
-                        stroke-linecap="round"
-                        class="segment"
-                    />
-                {/if}
-
-                <!-- Skipped segment (red) -->
-                {#if skippedPercent > 0}
-                    <circle
-                        cx={size / 2}
-                        cy={size / 2}
-                        r={radius}
-                        fill="none"
-                        stroke="var(--color-error)"
-                        stroke-width={strokeWidth}
-                        stroke-dasharray="{skippedDash} {circumference}"
-                        stroke-dashoffset={skippedOffset}
-                        stroke-linecap="round"
-                        class="segment"
-                    />
-                {/if}
-
-                <!-- Snoozed segment (amber) -->
-                {#if snoozedPercent > 0}
-                    <circle
-                        cx={size / 2}
-                        cy={size / 2}
-                        r={radius}
-                        fill="none"
-                        stroke="var(--aura-stretch)"
-                        stroke-width={strokeWidth}
-                        stroke-dasharray="{snoozedDash} {circumference}"
-                        stroke-dashoffset={snoozedOffset}
-                        stroke-linecap="round"
-                        class="segment"
-                    />
-                {/if}
-            </svg>
-
-            <!-- Center text -->
-            <div class="chart-center">
-                <span
-                    class="text-2xl font-light"
-                    class:text-success={complianceRate >= 70}
-                    class:text-warning={complianceRate >= 40 &&
-                        complianceRate < 70}
-                    class:text-error={complianceRate < 40}
-                >
-                    {complianceRate}%
-                </span>
-            </div>
-        </div>
-
-        <!-- Stats breakdown -->
-        <div class="flex-1 space-y-3">
-            <!-- Today's progress bar -->
-            <div class="today-progress">
-                <div class="flex justify-between text-xs mb-1">
-                    <span class="opacity-70">Today</span>
-                    <span class="text-success"
-                        >{todayCompleted}/{todayTotal}</span
-                    >
-                </div>
-                <div class="progress-bar">
+    <!-- 7-Day Bar Chart -->
+    <div class="chart-area">
+        {#each chartData as d}
+            <div class="bar-group">
+                <div class="bars">
+                    <!-- Completed Bar (Green) -->
                     <div
-                        class="progress-fill bg-success"
-                        style="width: {todayTotal > 0
-                            ? (todayCompleted / todayTotal) * 100
-                            : 0}%"
+                        class="bar bar-completed"
+                        style="height: {(d.completed / maxTotal) * 100}%"
+                        title="{d.completed} Completed"
+                    ></div>
+
+                    <!-- Snoozed Bar (Amber - pushed up by completed) -->
+                    <div
+                        class="bar bar-snoozed"
+                        style="height: {(d.snoozed / maxTotal) *
+                            100}%; bottom: {(d.completed / maxTotal) * 100}%"
+                        title="{d.snoozed} Snoozed"
+                    ></div>
+
+                    <!-- Skipped Bar (Red - pushed up by others) -->
+                    <div
+                        class="bar bar-skipped"
+                        style="height: {(d.skipped / maxTotal) *
+                            100}%; bottom: {((d.completed + d.snoozed) /
+                            maxTotal) *
+                            100}%"
+                        title="{d.skipped} Skipped"
                     ></div>
                 </div>
+                <span class="day-label">{d.day}</span>
             </div>
+        {/each}
+    </div>
 
-            <!-- Breakdown -->
-            <div class="stat-row">
-                <div class="stat-indicator bg-success"></div>
-                <span class="flex-1">Completed</span>
-                <span class="font-medium">{totalStats.completed}</span>
-                <span class="opacity-50 text-xs w-10 text-right"
-                    >{completedPercent}%</span
-                >
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-indicator bg-error"></div>
-                <span class="flex-1">Skipped</span>
-                <span class="font-medium">{totalStats.skipped}</span>
-                <span class="opacity-50 text-xs w-10 text-right"
-                    >{skippedPercent}%</span
-                >
-            </div>
-
-            <div class="stat-row">
-                <div class="stat-indicator bg-warning"></div>
-                <span class="flex-1">Snoozed</span>
-                <span class="font-medium">{totalStats.snoozed}</span>
-                <span class="opacity-50 text-xs w-10 text-right"
-                    >{snoozedPercent}%</span
-                >
-            </div>
+    <!-- Legend -->
+    <div class="flex items-center justify-center gap-4 mt-3 text-xs opacity-70">
+        <div class="flex items-center gap-1">
+            <div class="w-2 h-2 rounded-sm bg-success"></div>
+            <span>Completed</span>
+        </div>
+        <div class="flex items-center gap-1">
+            <div class="w-2 h-2 rounded-sm bg-warning"></div>
+            <span>Snoozed</span>
+        </div>
+        <div class="flex items-center gap-1">
+            <div class="w-2 h-2 rounded-sm bg-error"></div>
+            <span>Skipped</span>
         </div>
     </div>
 </div>
 
 <style>
     .compliance-card {
-        min-height: 180px;
-    }
-
-    .chart-container {
-        position: relative;
-        flex-shrink: 0;
-    }
-
-    .donut-chart {
-        transform: rotate(-90deg);
-    }
-
-    .segment {
-        transition:
-            stroke-dasharray 0.5s ease,
-            stroke-dashoffset 0.5s ease;
-    }
-
-    .chart-center {
-        position: absolute;
-        inset: 0;
+        min-height: 220px; /* Slight increase for chart */
         display: flex;
-        align-items: center;
-        justify-content: center;
         flex-direction: column;
     }
 
-    .today-progress {
-        padding: 0.5rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: 0.5rem;
+    .chart-area {
+        flex: 1;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding-top: 1rem;
+        padding-bottom: 0.5rem;
+        /* Optional rule line */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .progress-bar {
-        height: 4px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 9999px;
+    .bar-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        height: 100%;
+        justify-content: flex-end;
+    }
+
+    .bars {
+        width: 100%;
+        max-width: 24px;
+        height: 100px; /* Max height for bars */
+        position: relative;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 4px;
         overflow: hidden;
     }
 
-    .progress-fill {
-        height: 100%;
-        border-radius: 9999px;
-        transition: width 0.3s ease;
-    }
-
-    .stat-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.8rem;
-    }
-
-    .stat-indicator {
-        width: 8px;
-        height: 8px;
+    .bar {
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        left: 0;
+        transition:
+            height 0.3s ease,
+            bottom 0.3s ease;
         border-radius: 2px;
-        flex-shrink: 0;
+    }
+
+    /* Stacked look touches */
+    .bar-completed {
+        background-color: var(--aura-eye-care);
+        z-index: 10;
+    }
+    .bar-snoozed {
+        background-color: var(--aura-stretch);
+        z-index: 9;
+        opacity: 0.7;
+    }
+    .bar-skipped {
+        background-color: var(--color-error);
+        z-index: 8;
+        opacity: 0.7;
+    }
+
+    .day-label {
+        font-size: 0.65rem;
+        opacity: 0.6;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 </style>

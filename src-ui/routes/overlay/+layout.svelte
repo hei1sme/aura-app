@@ -3,7 +3,7 @@
   Does NOT import app.css to avoid background styles
 -->
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount } from "svelte";
 </script>
 
 <slot />
@@ -15,7 +15,7 @@
     padding: 0;
     box-sizing: border-box;
   }
-  
+
   :global(html) {
     background: transparent !important;
     background-color: transparent !important;
@@ -23,7 +23,7 @@
     border: none !important;
     outline: none !important;
   }
-  
+
   :global(body) {
     background: transparent !important;
     background-color: transparent !important;
@@ -33,13 +33,17 @@
     min-height: 100vh;
     border: none !important;
     outline: none !important;
+    box-shadow: none !important;
     /* Prevent any scrollbars which can appear as borders */
     scrollbar-width: none;
     -ms-overflow-style: none;
     /* Allow click-through on transparent areas (WebKit) */
     -webkit-app-region: no-drag;
+    /* Improve rendering quality */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  
+
   :global(body::-webkit-scrollbar) {
     display: none;
     width: 0;

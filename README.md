@@ -6,7 +6,8 @@
 
 ### The Intelligent Wellness Companion for Developers
 
-[![Rust](https://img.shields.io/badge/Rust-1.70%2B-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/)
+[![Version](https://img.shields.io/badge/Version-1.4.0-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
+[![Rust](https://img.shields.io/badge/Rust-1.70%2B-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/ )
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-FF3E00?style=flat-square&logo=svelte&logoColor=white)](https://kit.svelte.dev)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org)
@@ -25,9 +26,29 @@
 
 <div align="center">
 
-👁️ **Smart Eye Care** &nbsp;•&nbsp; 💧 **Hydration Tracking** &nbsp;•&nbsp; 🧘 **Stretch Reminders** &nbsp;•&nbsp; 📅 **Flexible Scheduling**
+📊 **Enterprise Analytics** &nbsp;•&nbsp; 👁️ **Smart Eye Care** &nbsp;•&nbsp; 💧 **Hydration Tracking** &nbsp;•&nbsp; 🧘 **Stretch Reminders** &nbsp;•&nbsp; 📅 **Flexible Scheduling**
 
 </div>
+
+---
+
+## 🎯 What's New in v1.4.0
+
+<div align="center">
+
+<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/analytics_dashboard_hero_1768995125280.png" width="80%">
+
+</div>
+
+### 📊 Enterprise-Level Analytics Dashboard
+
+Transform your wellness data into actionable insights with our completely redesigned analytics-focused dashboard:
+
+- **Break Compliance Tracking** - Visual breakdown of completed, skipped, and snoozed breaks with trend analysis
+- **Hydration Analytics** - 7-day intake trends with goal achievement tracking
+- **Activity Patterns** - Real-time keyboard (keys/min) and mouse velocity charts
+- **Work Session Analytics** - Comprehensive tracking of your productivity patterns
+- **One-Click Controls** - Instant pause/resume toggle for seamless workflow management
 
 ---
 
@@ -40,30 +61,40 @@ Personalized break notifications based on your actual work patterns — not arbi
 - **20-20-20 Rule**: Eye rest reminders every 20 minutes
 - **Stretch Breaks**: Movement prompts every 45-60 minutes
 - **Active Time Tracking**: Timer pauses when you're idle, counts only real work time
+- **Immersive Mode Detection**: Auto-suppresses breaks during fullscreen apps (gaming, presentations)
 
 ### 💧 Intelligent Hydration
 
 Aura doesn't just nag you to drink water — it **knows** when you've had enough.
 
-- **Goal Tracking**: Logs intake against your daily goal (default: 2000ml)
+- **Goal Tracking**: Logs intake against your daily goal (customizable, default: 2000ml)
 - **Auto-Silence**: Hydration reminders pause automatically once you hit your goal
-- **Quick Logging**: One-click buttons for common amounts (250ml, 500ml)
+- **Quick Logging**: One-click buttons for common amounts (100ml, 250ml, 500ml)
+- **Weekly Trends**: Visualize your hydration patterns over time
 
 ### 📅 Pro Scheduler
 
 Flexible scheduling that adapts to your life, not the other way around.
 
 - **3 Scheduling Modes**: "Same Every Day", "Weekdays vs. Weekends", or fully "Custom"
-- **Automated Actions**: Pause, Resume, or Reset sessions at specific times
+- **Automated Actions**: Pause, Resume, Reset, Start, or End sessions at specific times
 - **Smart Warnings**: Get a gentle 1-minute heads-up before any schedule rule triggers
+- **Cross-Restart Persistence**: Your schedule rules survive app restarts
 
-### 🔔 Glassmorphic Notifications
+### 🔔 Premium Notifications
 
 Beautiful, non-intrusive overlay notifications that respect your workflow.
 
-- **Custom Overlay Window**: Transparent, corner-positioned notifications
-- **Click-Through Logic**: Never steals focus while you're typing
-- **Theme-Matched**: Adapts to break type with smooth animations
+<div align="center">
+
+<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/break_reminder_overlay_1768995281718.png" width="40%">
+
+</div>
+
+- **Custom Overlay Window**: Transparent, floating glassmorphism notifications
+- **Enhanced Visual Design**: Stronger backdrop blur, multi-layer shadows, refined borders
+- **Theme-Matched**: Color-coded by break type (green/orange/blue) with smooth animations
+- **No Focus Stealing**: Never interrupts your active typing or workflow
 
 ---
 
@@ -75,7 +106,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 <tr>
 <td width="50%" align="center">
 
-<img src="assets/SessionHub.png" width="100%">
+<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/session_hub_interface_1768995405502.png" width="100%">
 
 **Session Hub**  
 <sub>Your command center for work sessions</sub>
@@ -83,10 +114,28 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 </td>
 <td width="50%" align="center">
 
-<img src="assets/SmartOverlay.png" width="100%">
+<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/analytics_dashboard_hero_1768995125280.png" width="100%">
+
+**Analytics Dashboard**  
+<sub>Enterprise-level wellness insights</sub>
+
+</td>
+</tr>
+<tr>
+<td width="50%" align="center">
+
+<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/break_reminder_overlay_1768995281718.png" width="80%">
 
 **Smart Overlay**  
 <sub>Beautiful break notifications</sub>
+
+</td>
+<td width="50%" align="center">
+
+<img src="assets/SmartOverlay.png" width="100%">
+
+**Settings Interface**  
+<sub>Powerful schedule management</sub>
 
 </td>
 </tr>
@@ -100,33 +149,82 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 
 Aura uses a hybrid **Sidecar Pattern** combining the best of three languages:
 
+<div align="center">
+
 | Layer | Technology | Responsibility |
 |:---:|:---|:---|
 | **Core** | Rust (Tauri v2) | System Tray, Window Management, OS Integration |
-| **UI** | SvelteKit + TypeScript | Reactive Interface, DaisyUI, Glassmorphism Effects |
-| **Brain** | Python 3.11 | SQLite Database, ML Data Collection, Scheduling Logic |
+| **UI** | SvelteKit 5 + TypeScript | Reactive Interface, DaisyUI, Glassmorphism Effects |
+| **Brain** | Python 3.11 | SQLite Database, Activity Monitoring, Scheduling Logic |
+
+</div>
 
 ```mermaid
-graph LR
-    subgraph Frontend
-        UI[Svelte UI]
+graph TB
+    subgraph "Frontend Layer"
+        UI[Svelte 5 UI]
+        Store[Analytics Store]
     end
     
-    subgraph Tauri
-        Core[Rust Core]
+    subgraph "Core Layer (Rust/Tauri)"
+        Core[IPC Bridge]
         Tray[System Tray]
+        Windows[Window Manager]
     end
     
-    subgraph Backend
-        Py[Python Engine]
-        DB[(SQLite)]
+    subgraph "Backend Layer (Python)"
+        Engine[Aura Engine]
+        Monitor[Activity Monitor]
+        Scheduler[Break Scheduler]
+        WorkSched[Work Schedule Manager]
+        DB[(SQLite Database)]
     end
     
-    UI <-->|IPC| Core
-    Core <-->|Stdio JSON| Py
-    Py <-->|SQL| DB
+    UI <-->|IPC Commands| Core
+    Core <-->|Stdio JSON| Engine
+    Engine --> Monitor
+    Engine --> Scheduler
+    Engine --> WorkSched
+    Monitor --> DB
+    Scheduler --> DB
+    WorkSched --> DB
     Core --> Tray
+    Core --> Windows
+    Store -.->|Analytics Data| UI
 ```
+
+### Technology Stack
+
+<details>
+<summary><b>Frontend</b></summary>
+
+- **Framework**: SvelteKit 2 with Svelte 5 (Runes API)
+- **Language**: TypeScript 5.6
+- **Styling**: Tailwind CSS 4.1 + DaisyUI 5.5
+- **Build Tool**: Vite 6
+
+</details>
+
+<details>
+<summary><b>Backend</b></summary>
+
+- **Runtime**: Tauri 2.0 (Rust-based)
+- **Engine**: Python 3.11 (PyInstaller for distribution)
+- **Database**: SQLite 3
+- **IPC**: JSON over stdio
+
+</details>
+
+<details>
+<summary><b>Key Features</b></summary>
+
+- Thread-safe state management with Rust mutex
+- Real-time activity monitoring (keyboard/mouse)
+- Persistent session state across restarts
+- Time-based automation with WorkScheduleManager
+- ML-ready data collection for future adaptive AI
+
+</details>
 
 ---
 
@@ -160,7 +258,15 @@ cd aura-app
 npm install
 ```
 
-**3. Run in development mode**
+**3. Build Python sidecar** (First time only)
+
+```bash
+./rebuild_sidecar.sh    # Git Bash / Linux / macOS
+# or
+./rebuild_sidecar.ps1   # PowerShell
+```
+
+**4. Run in development mode**
 
 ```bash
 npm run tauri dev
@@ -190,7 +296,45 @@ We include robust build scripts that compile the Python engine into a standalone
 
 </details>
 
-**Output**: `src-tauri/target/release/bundle/nsis/Aura_1.3.0_x64-setup.exe`
+**Output**: `src-tauri/target/release/bundle/nsis/Aura_1.4.0_x64-setup.exe`
+
+---
+
+## 💎 Advanced Features
+
+### Timer Modes
+
+Choose between two timing philosophies:
+
+- **Wall Clock Mode** (Default): Consistent break intervals based on real time
+- **Active Time Mode**: Breaks trigger only based on actual keyboard/mouse activity
+
+### Work Session States
+
+Aura implements a proper finite state machine:
+
+```
+IDLE → start_session() → ACTIVE
+ACTIVE → pause_session() → PAUSED
+PAUSED → resume_session() → ACTIVE
+ACTIVE/PAUSED → end_session() → IDLE
+```
+
+Each transition is thread-safe and persisted to disk.
+
+### Schedule Automation
+
+Create time-based rules to automate your workflow:
+
+```typescript
+// Example: Auto-pause for lunch at 12:00 PM
+{
+  time: "12:00",
+  action: "pause",
+  days: ["mon", "tue", "wed", "thu", "fri"],
+  enabled: true
+}
+```
 
 ---
 
@@ -199,7 +343,7 @@ We include robust build scripts that compile the Python engine into a standalone
 <details>
 <summary><b>How does the break timer work?</b></summary>
 
-Aura tracks your **active work time**, not wall-clock time. When you step away from the computer (idle > 3 minutes), the timer pauses automatically. This means you get breaks based on actual screen time.
+Aura tracks your **active work time** (configurable to wall-clock mode). When you step away from the computer (idle > 3 minutes), the timer pauses automatically in active-time mode. This means you get breaks based on actual screen time.
 
 </details>
 
@@ -211,13 +355,35 @@ Yes! Go to **Settings** to adjust:
 - Eye rest interval (default: 20 min)
 - Stretch break interval (default: 45 min)  
 - Hydration reminder interval (default: 30 min)
+- Daily hydration goal (default: 2000ml)
 
 </details>
 
 <details>
 <summary><b>Does Aura run in the background?</b></summary>
 
-Yes. When you close the main window, Aura minimizes to the **system tray**. Right-click the tray icon to pause, resume, or quit the app.
+Yes. When you close the main window, Aura minimizes to the **system tray**. Right-click the tray icon to access pause, resume, analytics, settings, or quit options.
+
+</details>
+
+<details>
+<summary><b>What data does Aura collect?</b></summary>
+
+All data stays **local** on your machine:
+
+- Break logs (completed/skipped/snoozed timestamps)
+- Hydration intake records
+- Keyboard/mouse activity metrics (for ML training)
+- Work session state
+
+No data is sent to any server. Your privacy is paramount.
+
+</details>
+
+<details>
+<summary><b>Can I use Aura offline?</b></summary>
+
+Absolutely! Aura is 100% offline. No internet connection required.
 
 </details>
 
@@ -225,7 +391,21 @@ Yes. When you close the main window, Aura minimizes to the **system tray**. Righ
 
 ## 🤝 Contributing
 
-We welcome contributions! Please check the [Issues](https://github.com/hei1sme/aura-app/issues) page.
+We welcome contributions! Please check the [Issues](https://github.com/hei1sme/aura-app/issues) page for open tasks.
+
+### Development Setup
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📋 Changelog
+
+See [CHANGELOG_v1.4.0.md](CHANGELOG_v1.4.0.md) for the latest release notes.
 
 ---
 
@@ -240,5 +420,11 @@ This project is licensed under the **[MIT License](LICENSE)**.
 *✨ Designed for Peace of Mind. 🌿*
 
 <sub>Made with ❤️ using Tauri + SvelteKit + Python</sub>
+
+---
+
+<img src="https://img.shields.io/badge/Powered%20by-Tauri-FFC131?style=for-the-badge&logo=tauri&logoColor=white">
+<img src="https://img.shields.io/badge/Built%20with-SvelteKit-FF3E00?style=for-the-badge&logo=svelte&logoColor=white">
+<img src="https://img.shields.io/badge/Enhanced%20with-Python-3776AB?style=for-the-badge&logo=python&logoColor=white">
 
 </div>

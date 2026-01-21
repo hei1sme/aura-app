@@ -189,6 +189,7 @@ class DatabaseManager:
                 ]
             ),
             "schedule_mode": "same_every_day",  # same_every_day, weekday_weekend, or custom
+            "timer_mode": "wall-clock",  # wall-clock (continuous) or active (pauses when idle)
         }
 
         for key, value in defaults.items():
@@ -276,6 +277,33 @@ class DatabaseManager:
             )
             return cursor.lastrowid
 
+    def update_break_log(
+        self,
+        log_id: int,
+        completed: bool = False,
+        skipped: bool = False,
+        snoozed: bool = False,
+    ) -> None:
+        """
+        Update an existing break log entry.
+
+        Args:
+            log_id: The ID of the log entry to update
+            completed: Whether the break was completed
+            skipped: Whether the break was skipped
+            snoozed: Whether the break was snoozed
+        """
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE logs 
+                SET completed = ?, skipped = ?, snoozed = ?
+                WHERE id = ?
+            """,
+                (completed, skipped, snoozed, log_id),
+            )
+
     def get_breaks_today(self) -> List[Dict[str, Any]]:
         """Get all breaks logged today."""
         import time
@@ -327,6 +355,56 @@ class DatabaseManager:
                 }
             return stats
 
+    def get_break_history(self, days: int = 7) -> Dict[str, Any]:
+        """
+        Get daily break statistics for the last N days.
+
+        Returns:
+            Dict where keys are dates (YYYY-MM-DD) and values are dicts of break types
+            containing completion stats.
+        """
+        import time
+        from datetime import datetime, timedelta
+
+        # Ensure we go back 'days' full days plus today so far
+        # Calculate midnight of N days ago
+        now = datetime.now()
+        start_date = now - timedelta(days=days - 1)  # -1 because today counts as 1
+        start_ts = int(start_date.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT 
+                    date(timestamp, 'unixepoch', 'localtime') as day,
+                    break_type,
+                    COUNT(*) as total,
+                    SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed,
+                    SUM(CASE WHEN skipped = 1 THEN 1 ELSE 0 END) as skipped,
+                    SUM(CASE WHEN snoozed = 1 THEN 1 ELSE 0 END) as snoozed
+                FROM logs
+                WHERE timestamp >= ?
+                GROUP BY day, break_type
+                ORDER BY day ASC
+            """,
+                (start_ts,),
+            )
+
+            history = {}
+            for row in cursor.fetchall():
+                day = row["day"]
+                if day not in history:
+                    history[day] = {}
+                
+                history[day][row["break_type"]] = {
+                    "total": row["total"],
+                    "completed": row["completed"],
+                    "skipped": row["skipped"],
+                    "snoozed": row["snoozed"],
+                }
+            return history
+
     # ==================== Hydration Methods ====================
 
     def log_hydration(self, amount_ml: int) -> int:
@@ -361,6 +439,38 @@ class DatabaseManager:
                 (today_start,),
             )
             return cursor.fetchone()["total"]
+
+    def get_hydration_history(self, days: int = 7) -> List[Dict[str, Any]]:
+        """
+        Get daily hydration totals for the last N days.
+        
+        Returns:
+            List of dicts: [{"date": "YYYY-MM-DD", "amount_ml": 1250}, ...]
+        """
+        import time
+        from datetime import datetime, timedelta
+
+        # Calculate midnight of N days ago
+        now = datetime.now()
+        start_date = now - timedelta(days=days - 1)
+        start_ts = int(start_date.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT 
+                    date(timestamp, 'unixepoch', 'localtime') as day,
+                    COALESCE(SUM(amount_ml), 0) as total_ml
+                FROM hydration_logs
+                WHERE timestamp >= ?
+                GROUP BY day
+                ORDER BY day ASC
+            """,
+                (start_ts,),
+            )
+            
+            return [{"date": row["day"], "amount_ml": row["total_ml"]} for row in cursor.fetchall()]
 
     # ==================== Training Data Methods ====================
 
@@ -474,6 +584,91 @@ class DatabaseManager:
             writer.writerows(data)
 
         return len(data)
+
+    def get_focus_stats(self, days: int = 7) -> Dict[str, int]:
+        """
+        Get focus distribution stats (app category usage) for the last N days.
+        
+        Returns:
+            Dict: {"Code": 150, "Web": 80, "Communication": 20, ...}
+        """
+        import time
+        
+        cutoff = int(time.time()) - (days * 86400)
+        
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT app_category, COUNT(*) as count
+                FROM training_data
+                WHERE timestamp >= ?
+                GROUP BY app_category
+                ORDER BY count DESC
+            """,
+                (cutoff,),
+            )
+            
+            stats = {}
+            for row in cursor.fetchall():
+                stats[row["app_category"]] = row["count"]
+            return stats
+
+    def get_activity_heatmap(self, days: int = 7) -> List[Dict[str, Any]]:
+        """
+        Get activity intensity aggregated by hour for the last N days.
+        
+        Returns:
+            List of dicts: [{"date": "YYYY-MM-DD", "hour": 14, "intensity": 0.8}, ...]
+        """
+        import time
+        from datetime import datetime, timedelta
+        
+        # Calculate start of N days ago
+        now = datetime.now()
+        start_date = now - timedelta(days=days - 1)
+        start_ts = int(start_date.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+        
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            # Group by Day and Hour
+            cursor.execute(
+                """
+                SELECT 
+                    date(timestamp, 'unixepoch', 'localtime') as day,
+                    strftime('%H', datetime(timestamp, 'unixepoch', 'localtime')) as hour,
+                    AVG(keys_per_min) as avg_keys,
+                    AVG(mouse_velocity) as avg_mouse,
+                    COUNT(*) as samples
+                FROM training_data
+                WHERE timestamp >= ?
+                GROUP BY day, hour
+                ORDER BY day ASC, hour ASC
+            """,
+                (start_ts,),
+            )
+            
+            heatmap = []
+            for row in cursor.fetchall():
+                # Calculate a normalized intensity score (0.0 to 1.0+)
+                # Heuristic: 50 KPM + 200px/s mouse = "High Activity" (1.0)
+                kpm = row["avg_keys"]
+                mouse = row["avg_mouse"]
+                
+                # Simple weight: KPM is more indicative of "work" than mouse
+                intensity = (kpm / 60.0) + (mouse / 1000.0)
+                
+                heatmap.append({
+                    "date": row["day"],
+                    "hour": int(row["hour"]),
+                    "intensity": round(intensity, 2),
+                    "details": {
+                        "kpm": int(kpm),
+                        "mouse": int(mouse),
+                        "samples": row["samples"]
+                    }
+                })
+            return heatmap
 
     # ==================== Schedule Rules Methods ====================
 

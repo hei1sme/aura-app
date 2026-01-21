@@ -10,7 +10,8 @@
     BreakComplianceCard,
     HydrationTrendsCard,
     TodaysTimelineCard,
-    ActivityCard,
+    FocusDistributionCard,
+    ActivityHeatmapCard,
   } from "$lib/components";
   import {
     sidecarConnected,
@@ -25,7 +26,14 @@
     isPaused,
     pauseUntil,
   } from "$lib/stores";
-  import { updateBreakStats, updateBreaksToday } from "$lib/stores/analytics";
+  import {
+    updateBreakStats,
+    updateBreaksToday,
+    updateBreakHistory,
+    updateHydrationHistory,
+    updateFocusStats,
+    updateActivityHeatmap,
+  } from "$lib/stores/analytics";
   import {
     onReady,
     onStatus,
@@ -36,9 +44,20 @@
     onError,
     onBreakStats,
     onBreaksToday,
+    onBreakHistory,
+    onHydrationHistory,
+    onFocusStats,
+    onActivityHeatmap,
+    onBreakCompleted,
+    onBreakSnoozed,
+    onBreakSkipped,
     getStatus,
     getBreakStats,
     getBreaksToday,
+    getBreakHistory,
+    getHydrationHistory,
+    getFocusStats,
+    getActivityHeatmap,
     pauseReminders,
     resumeReminders,
   } from "$lib/ipc";
@@ -125,6 +144,41 @@
         updateBreaksToday(breaks);
       }),
 
+      onBreakHistory((history) => {
+        updateBreakHistory(history);
+      }),
+
+      onHydrationHistory((history) => {
+        updateHydrationHistory(history);
+      }),
+
+      onFocusStats((stats) => {
+        updateFocusStats(stats);
+      }),
+
+      onActivityHeatmap((heatmap) => {
+        updateActivityHeatmap(heatmap);
+      }),
+
+      // Real-time updates for break actions
+      onBreakCompleted(() => {
+        getBreaksToday();
+        getBreakStats(7);
+        getBreakHistory(7);
+      }),
+
+      onBreakSnoozed(() => {
+        getBreaksToday();
+        getBreakStats(7);
+        getBreakHistory(7);
+      }),
+
+      onBreakSkipped(() => {
+        getBreaksToday();
+        getBreakStats(7);
+        getBreakHistory(7);
+      }),
+
       onError((error) => {
         console.error("Sidecar error:", error.message);
         notifications.update((n) => [
@@ -155,7 +209,15 @@
 
     // Request initial data
     try {
-      await Promise.all([getStatus(), getBreakStats(7), getBreaksToday()]);
+      await Promise.all([
+        getStatus(),
+        getBreakStats(7),
+        getBreaksToday(),
+        getBreakHistory(7),
+        getHydrationHistory(7),
+        getFocusStats(7),
+        getActivityHeatmap(7),
+      ]);
     } catch (error) {
       console.error("Failed to get initial data:", error);
     }
@@ -281,8 +343,13 @@
     <HydrationTrendsCard />
 
     <!-- Row 2 -->
-    <ActivityCard />
-    <TodaysTimelineCard />
+    <FocusDistributionCard />
+    <ActivityHeatmapCard />
+
+    <!-- Row 3 -->
+    <div class="row-span-1 col-span-2">
+      <TodaysTimelineCard />
+    </div>
   </div>
 
   <!-- Footer -->
@@ -304,6 +371,10 @@
   @media (max-width: 768px) {
     .analytics-grid {
       grid-template-columns: 1fr;
+    }
+
+    .col-span-2 {
+      grid-column: span 1 / span 1;
     }
   }
 </style>

@@ -68,7 +68,7 @@ class AuraEngine:
     - Interruptible sleep for clean shutdown (no STATUS_CONTROL_C_EXIT)
     """
 
-    VERSION = "1.3.0"
+    VERSION = "1.4.0"
     TARGET_FRAME_TIME = 0.1  # 100ms tick rate for responsive loop
     METRICS_BROADCAST_INTERVAL = 1.0  # seconds
     IDLE_ZERO_THRESHOLD = 1.0  # Force zero after 1 second of no input
@@ -123,6 +123,7 @@ class AuraEngine:
         self._last_metrics_broadcast = time.perf_counter()
         self._last_update_time = time.perf_counter()
         self._pending_record_id: Optional[int] = None
+        self._pending_log_id: Optional[int] = None
 
         # Force Zero tracking
         self._last_input_time = time.perf_counter()
@@ -214,8 +215,8 @@ class AuraEngine:
             },
         )
 
-        # Also log to break logs
-        self._db.log_break(
+        # Also log to break logs and store ID for update
+        self._pending_log_id = self._db.log_break(
             break_type=break_type.value,
             duration_seconds=config.duration_seconds,
             completed=False,
@@ -257,21 +258,42 @@ class AuraEngine:
         if command == "complete_break":
             # User completed the break - positive label
             self._scheduler.complete_break()
-            self._collector.mark_break_completed(self._pending_record_id)
-            self._pending_record_id = None
+            if self._pending_record_id:
+                self._collector.mark_break_completed(self._pending_record_id)
+                self._pending_record_id = None
+            
+            # Update log status
+            if self._pending_log_id:
+                self._db.update_break_log(self._pending_log_id, completed=True)
+                self._pending_log_id = None
+                
             self._emit("break_completed")
 
         elif command == "snooze_break":
             minutes = cmd.get("minutes", 5)
             self._scheduler.snooze_break(minutes)
-            self._collector.mark_break_dismissed(self._pending_record_id)
-            self._pending_record_id = None
+            if self._pending_record_id:
+                self._collector.mark_break_dismissed(self._pending_record_id)
+                self._pending_record_id = None
+                
+            # Update log status
+            if self._pending_log_id:
+                self._db.update_break_log(self._pending_log_id, snoozed=True)
+                self._pending_log_id = None
+                
             self._emit("break_snoozed", {"minutes": minutes})
 
         elif command == "skip_break":
             self._scheduler.skip_break()
-            self._collector.mark_break_dismissed(self._pending_record_id)
-            self._pending_record_id = None
+            if self._pending_record_id:
+                self._collector.mark_break_dismissed(self._pending_record_id)
+                self._pending_record_id = None
+                
+            # Update log status
+            if self._pending_log_id:
+                self._db.update_break_log(self._pending_log_id, skipped=True)
+                self._pending_log_id = None
+                
             self._emit("break_skipped")
 
         elif command == "pause":
@@ -456,6 +478,26 @@ class AuraEngine:
         elif command == "get_breaks_today":
             breaks = self._db.get_breaks_today()
             self._emit("breaks_today", breaks)
+
+        elif command == "get_break_history":
+            days = cmd.get("days", 7)
+            history = self._db.get_break_history(days)
+            self._emit("break_history", history)
+
+        elif command == "get_hydration_history":
+            days = cmd.get("days", 7)
+            history = self._db.get_hydration_history(days)
+            self._emit("hydration_history", history)
+
+        elif command == "get_focus_stats":
+            days = cmd.get("days", 7)
+            stats = self._db.get_focus_stats(days)
+            self._emit("focus_stats", stats)
+
+        elif command == "get_activity_heatmap":
+            days = cmd.get("days", 7)
+            heatmap = self._db.get_activity_heatmap(days)
+            self._emit("activity_heatmap", heatmap)
 
         elif command == "shutdown":
             self._running = False

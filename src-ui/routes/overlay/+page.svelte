@@ -376,19 +376,32 @@
     background: transparent !important;
     margin: 0;
     padding: 0;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
   }
 
   .card-content {
     text-align: center;
-    /* The actual card with glass effect */
-    background: rgba(15, 23, 42, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    /* The actual card with enhanced glass effect */
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 24px;
+    /* Refined border with subtle gradient */
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Enhanced multi-layer shadow for depth */
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 24px 64px rgba(0, 0, 0, 0.3),
+      0 0 1px rgba(0, 0, 0, 0.5);
     padding: 2.5rem 3rem;
     min-width: 320px;
+    /* Improve rendering */
+    transform: translateZ(0);
+    -webkit-font-smoothing: antialiased;
+    will-change: transform;
   }
 
   .emoji {

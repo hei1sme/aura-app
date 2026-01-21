@@ -1,6 +1,6 @@
 [package]
 name = "aura-app"
-version = "1.3.0"
+version = "1.4.0"
 description = "Aura - The Intelligent Wellness Companion"
 authors = ["Aura Team"]
 edition = "2021"
