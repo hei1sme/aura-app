@@ -176,6 +176,23 @@ export async function exportData(path: string): Promise<void> {
   return invoke('export_data', { path });
 }
 
+// ===== ANALYTICS DATA =====
+
+/**
+ * Get break compliance statistics for the last N days
+ */
+export async function getBreakStats(days: number = 7): Promise<void> {
+  return invoke('get_break_stats', { days });
+}
+
+/**
+ * Get today's break history
+ */
+export async function getBreaksToday(): Promise<void> {
+  return invoke('get_breaks_today');
+}
+
+
 // ===== SESSION CONTROL =====
 
 /**
@@ -515,6 +532,31 @@ export function onScheduleWarning(callback: EventCallback<{ action: string; time
     callback(sidecarEvent.data!);
   });
 }
+
+// ===== ANALYTICS EVENT LISTENERS =====
+
+import type { BreakStats, BreakLog } from '$lib/stores/analytics';
+
+/**
+ * Listen to break stats updates
+ */
+export function onBreakStats(callback: EventCallback<BreakStats>): Promise<UnlistenFn> {
+  return listen('sidecar-break_stats', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<BreakStats>;
+    callback(sidecarEvent.data!);
+  });
+}
+
+/**
+ * Listen to breaks today updates
+ */
+export function onBreaksToday(callback: EventCallback<BreakLog[]>): Promise<UnlistenFn> {
+  return listen('sidecar-breaks_today', (event) => {
+    const sidecarEvent = event.payload as SidecarEvent<BreakLog[]>;
+    callback(sidecarEvent.data!);
+  });
+}
+
 
 // ===== Utility Functions =====
 

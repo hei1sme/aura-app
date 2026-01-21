@@ -318,6 +318,26 @@ async fn reset_all_timers(app: AppHandle) -> Result<(), String> {
     send_to_sidecar(app, cmd).await
 }
 
+// ===== ANALYTICS COMMANDS =====
+
+/// Get break compliance statistics for the last N days
+#[tauri::command]
+async fn get_break_stats(app: AppHandle, days: Option<i32>) -> Result<(), String> {
+    let cmd = serde_json::json!({
+        "cmd": "get_break_stats",
+        "days": days.unwrap_or(7)
+    });
+    send_to_sidecar(app, cmd).await
+}
+
+/// Get today's break history
+#[tauri::command]
+async fn get_breaks_today(app: AppHandle) -> Result<(), String> {
+    let cmd = serde_json::json!({ "cmd": "get_breaks_today" });
+    send_to_sidecar(app, cmd).await
+}
+
+
 /// Helper function to write command to sidecar stdin
 fn write_to_sidecar(app: &AppHandle, command: serde_json::Value) {
     if let Some(state) = app.try_state::<SidecarState>() {
@@ -696,6 +716,9 @@ pub fn run() {
             update_schedule_rule,
             delete_schedule_rule,
             reset_all_timers,
+            // Analytics
+            get_break_stats,
+            get_breaks_today,
         ])
         .setup(|app| {
             // Check if started with --minimized flag (autostart at system boot)

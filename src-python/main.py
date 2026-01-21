@@ -447,6 +447,16 @@ class AuraEngine:
             self._emit("timers_reset")
             self._broadcast_status()
 
+        # ===== ANALYTICS COMMANDS =====
+        elif command == "get_break_stats":
+            days = cmd.get("days", 7)
+            stats = self._db.get_break_stats(days)
+            self._emit("break_stats", stats)
+
+        elif command == "get_breaks_today":
+            breaks = self._db.get_breaks_today()
+            self._emit("breaks_today", breaks)
+
         elif command == "shutdown":
             self._running = False
             self._emit("shutdown_ack")
