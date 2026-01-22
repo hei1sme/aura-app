@@ -1,6 +1,6 @@
 {
   "name": "aura-app",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Your Intelligent Wellness Companion",
   "type": "module",
   "scripts": {

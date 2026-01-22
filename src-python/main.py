@@ -68,7 +68,7 @@ class AuraEngine:
     - Interruptible sleep for clean shutdown (no STATUS_CONTROL_C_EXIT)
     """
 
-    APP_VERSION = "1.5.2"
+    APP_VERSION = "1.5.3"
     TARGET_FRAME_TIME = 0.1  # 100ms tick rate for responsive loop
     METRICS_BROADCAST_INTERVAL = 1.0  # seconds
     IDLE_ZERO_THRESHOLD = 1.0  # Force zero after 1 second of no input

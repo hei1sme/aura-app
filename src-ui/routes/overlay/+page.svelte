@@ -37,6 +37,9 @@
   let state: "nudge" | "action" | "complete" | "hydration-select" = "nudge";
   let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
+  // Track current break ID to prevent resetting state for the same break
+  let currentBreakId: number | null = null;
+
   // Sound settings
   let soundEnabled = true;
 
@@ -102,9 +105,24 @@
     try {
       const pendingBreak = await getPendingBreak();
       console.log("[Overlay] Pending break:", pendingBreak);
+
       if (pendingBreak) {
+        // CRITICAL FIX: If we are already working on this break (action/complete),
+        // DO NOT reset the state to 'nudge'.
+        if (state !== "nudge" && currentBreakId === pendingBreak.record_id) {
+          console.log(
+            "[Overlay] Ignoring pending break check - already in progress for this ID",
+          );
+          return;
+        }
+
         setBreakDue(pendingBreak);
-        state = "nudge";
+
+        // Only reset state if it's a NEW break
+        if (currentBreakId !== pendingBreak.record_id) {
+          state = "nudge";
+          currentBreakId = pendingBreak.record_id;
+        }
       }
     } catch (error) {
       console.error("[Overlay] Failed to get pending break:", error);
@@ -142,8 +160,16 @@
         record_id: number;
       };
       if (breakData) {
+        // CRITICAL FIX: Ignore if we are already processing this break
+        if (state !== "nudge" && currentBreakId === breakData.record_id) {
+          console.log("[Overlay] Ignoring show-break - already in progress");
+          return;
+        }
+
         setBreakDue(breakData);
         state = "nudge";
+        currentBreakId = breakData.record_id;
+
         // Play notification sound (deduplicated by record_id)
         playNotificationIfEnabled(breakData.break_type, breakData.record_id);
       }
@@ -162,8 +188,17 @@
     // Also listen for future break events (for real breaks from sidecar)
     unlistenBreak = await onBreakDue((breakEvent) => {
       console.log("[Overlay] Break event received:", breakEvent);
+
+      // CRITICAL FIX: Ignore if we are already processing this break
+      if (state !== "nudge" && currentBreakId === breakEvent.record_id) {
+        console.log("[Overlay] Ignoring onBreakDue - already in progress");
+        return;
+      }
+
       setBreakDue(breakEvent);
       state = "nudge";
+      currentBreakId = breakEvent.record_id;
+
       // Play notification sound (deduplicated by record_id)
       playNotificationIfEnabled(breakEvent.break_type, breakEvent.record_id);
     });
@@ -184,13 +219,23 @@
       return;
     }
 
+    // CRITICAL FIX: Clear any existing interval before starting a new one
+    // This prevents "zombie" intervals from running in parallel if the user clicks Start multiple times
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+
     state = "action";
     breakCountdown.set(duration);
 
     countdownInterval = setInterval(() => {
       breakCountdown.update((n) => {
         if (n <= 1) {
-          if (countdownInterval) clearInterval(countdownInterval);
+          if (countdownInterval) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+          }
           state = "complete";
           // Play completion sound
           playCompletionIfEnabled();
@@ -247,6 +292,7 @@
     clearPendingBreak(); // Also clear from Rust state
     state = "nudge";
     lastSoundBreakId = null; // Reset so next break can play sound
+    currentBreakId = null; // Reset current break ID
     // Hide the overlay window
     try {
       await hideOverlay();
