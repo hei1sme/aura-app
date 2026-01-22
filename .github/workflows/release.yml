@@ -45,6 +45,17 @@ jobs:
       - name: Install dependencies (frontend)
         run: npm install
 
+      - name: Check for Secrets
+        env:
+          PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          if [ -z "$PRIVATE_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY is MISSING! The app will NOT be signed."
+            exit 1
+          else
+            echo "✅ TAURI_SIGNING_PRIVATE_KEY is present."
+          fi
+
       - name: Build the app
         uses: tauri-apps/tauri-action@v0
         env:
