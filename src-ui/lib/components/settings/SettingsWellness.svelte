@@ -6,6 +6,16 @@
     let isSaving = false;
     let saveMessage = "";
 
+    // Helper to format duration display
+    function formatDuration(seconds: number): string {
+        if (seconds >= 60) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return secs > 0 ? `${minutes}m ${secs}s` : `${minutes}m`;
+        }
+        return `${seconds}s`;
+    }
+
     async function saveWellnessSettings() {
         isSaving = true;
         try {
@@ -16,6 +26,10 @@
             await updateSetting(
                 "macro_break_interval",
                 String(settings.macroBreakInterval * 60),
+            );
+            await updateSetting(
+                "macro_break_duration",
+                String(settings.macroBreakDuration),
             );
             await updateSetting(
                 "hydration_interval",
@@ -85,7 +99,31 @@
                 class="range range-warning range-sm"
             />
             <div class="text-xs opacity-50 mt-1">
-                Longer 5m breaks to move your body
+                How often you'll be reminded to stretch
+            </div>
+        </div>
+
+        <!-- Stretch Break Duration -->
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <label class="label-text flex items-center gap-2 font-medium">
+                    <span class="w-3 h-3 rounded-full bg-amber-500/50"></span>
+                    Stretch Break Duration
+                </label>
+                <span class="font-mono text-sm bg-base-300 px-2 py-1 rounded">
+                    {formatDuration(settings.macroBreakDuration)}
+                </span>
+            </div>
+            <input
+                type="range"
+                min="30"
+                max="300"
+                step="30"
+                bind:value={settings.macroBreakDuration}
+                class="range range-warning range-sm opacity-70"
+            />
+            <div class="text-xs opacity-50 mt-1">
+                How long the stretch break countdown lasts (30s - 5min)
             </div>
         </div>
 

@@ -5,12 +5,8 @@
 -->
 <script lang="ts">
     import { focusStats } from "$lib/stores/analytics";
-    import { getFocusStats } from "$lib/ipc";
-    import { onMount } from "svelte";
-
-    onMount(() => {
-        getFocusStats(7); // Last 7 days
-    });
+    // Note: Data is fetched by the parent page (+page.svelte) to avoid race conditions
+    // The parent sets up event listeners BEFORE requesting data
 
     $: total = Object.values($focusStats).reduce((a, b) => a + b, 0);
 

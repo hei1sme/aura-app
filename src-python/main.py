@@ -193,10 +193,15 @@ class AuraEngine:
 
         This is where we implement the DATA-FIRST strategy:
         Record activity snapshot before showing break reminder.
+        
+        NOTE: This is called both for new breaks AND snooze re-triggers.
+        We only create a new log entry for the FIRST trigger (when _pending_log_id is None).
+        Snooze re-triggers reuse the existing log to prevent duplicate entries.
         """
         metrics = self._monitor.get_metrics()
 
         # Record training data BEFORE showing break
+        # (This is OK to do on every trigger - it's separate from break logs)
         self._pending_record_id = self._collector.record_activity_snapshot(
             mouse_velocity=metrics.mouse_velocity,
             keys_per_min=metrics.keys_per_min,
@@ -215,14 +220,16 @@ class AuraEngine:
             },
         )
 
-        # Also log to break logs and store ID for update
-        self._pending_log_id = self._db.log_break(
-            break_type=break_type.value,
-            duration_seconds=config.duration_seconds,
-            completed=False,
-            skipped=False,
-            snoozed=False,
-        )
+        # Only create NEW log entry if this is a fresh break trigger (not a snooze re-trigger)
+        # When snooze expires and re-triggers, _pending_log_id is still set from the original trigger
+        if self._pending_log_id is None:
+            self._pending_log_id = self._db.log_break(
+                break_type=break_type.value,
+                duration_seconds=config.duration_seconds,
+                completed=False,
+                skipped=False,
+                snoozed=False,
+            )
 
     def _on_schedule_action(self, action: str, time: str, title: str) -> None:
         """Handle work schedule actions (emit event to frontend)."""
@@ -276,10 +283,14 @@ class AuraEngine:
                 self._collector.mark_break_dismissed(self._pending_record_id)
                 self._pending_record_id = None
                 
-            # Update log status
+            # Update log status to snoozed
+            # IMPORTANT: Do NOT clear _pending_log_id here!
+            # When snooze expires and _on_break_due is called again,
+            # we need the ID to prevent creating a duplicate log entry.
             if self._pending_log_id:
                 self._db.update_break_log(self._pending_log_id, snoozed=True)
-                self._pending_log_id = None
+                # Keep _pending_log_id set - it will be cleared when user finally
+                # completes or skips the break after snooze
                 
             self._emit("break_snoozed", {"minutes": minutes})
 

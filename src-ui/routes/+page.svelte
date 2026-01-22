@@ -207,17 +207,44 @@
       }),
     ]);
 
-    // Request initial data
+    // Request initial data with retry for analytics
+    // Delay ensures sidecar event loop is ready after page navigation
+    const fetchAnalyticsData = async () => {
+      try {
+        await Promise.all([
+          getBreakStats(7),
+          getBreaksToday(),
+          getBreakHistory(7),
+          getHydrationHistory(7),
+          getFocusStats(7),
+          getActivityHeatmap(7),
+        ]);
+      } catch (error) {
+        console.error("Failed to get analytics data:", error);
+      }
+    };
+
     try {
-      await Promise.all([
-        getStatus(),
-        getBreakStats(7),
-        getBreaksToday(),
-        getBreakHistory(7),
-        getHydrationHistory(7),
-        getFocusStats(7),
-        getActivityHeatmap(7),
-      ]);
+      // Wait for event listeners to be fully established
+      // This delay is CRITICAL for production builds where timing is tighter
+      await new Promise((resolve) => setTimeout(resolve, 300));
+
+      // Fetch status first
+      await getStatus();
+
+      // Fetch analytics data
+      await fetchAnalyticsData();
+
+      // Progressive retry strategy for production timing issues
+      // First retry: 800ms after initial load
+      setTimeout(() => {
+        fetchAnalyticsData();
+      }, 800);
+
+      // Second retry: 1500ms as final fallback
+      setTimeout(() => {
+        fetchAnalyticsData();
+      }, 1500);
     } catch (error) {
       console.error("Failed to get initial data:", error);
     }

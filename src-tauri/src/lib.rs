@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{
     AppHandle, Emitter, Manager, State, PhysicalPosition,
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItem, Submenu, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
 };
 use tauri_plugin_shell::{process::{CommandEvent, CommandChild}, ShellExt};
@@ -106,6 +106,9 @@ async fn skip_break(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 async fn show_overlay(app: AppHandle) -> Result<(), String> {
     if let Some(overlay) = app.get_webview_window("overlay") {
+        // Ensure decorations are off (Windows sometimes ignores config)
+        let _ = overlay.set_decorations(false);
+        let _ = overlay.set_title("");
         overlay.show().map_err(|e| e.to_string())?;
         overlay.set_focus().map_err(|e| e.to_string())?;
         Ok(())
@@ -142,6 +145,9 @@ async fn trigger_test_break(app: AppHandle, break_type: String, duration_seconds
     
     // Show the overlay window
     if let Some(overlay) = app.get_webview_window("overlay") {
+        // Ensure decorations are off (Windows sometimes ignores config)
+        let _ = overlay.set_decorations(false);
+        let _ = overlay.set_title("");
         overlay.show().map_err(|e| e.to_string())?;
         overlay.set_focus().map_err(|e| e.to_string())?;
         
@@ -393,25 +399,46 @@ fn write_to_sidecar(app: &AppHandle, command: serde_json::Value) {
 
 /// Setup system tray
 fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-    let quit = MenuItem::with_id(app, "quit", "Quit Aura", true, None::<&str>)?;
-    let show = MenuItem::with_id(app, "show", "Show Dashboard", true, None::<&str>)?;
-    let separator1 = MenuItem::with_id(app, "sep1", "─────────────", false, None::<&str>)?;
-    let pause_30m = MenuItem::with_id(app, "pause_30m", "⏸️ Pause 30 min", true, None::<&str>)?;
-    let pause_1h = MenuItem::with_id(app, "pause_1h", "⏸️ Pause 1 hour", true, None::<&str>)?;
-    let pause_2h = MenuItem::with_id(app, "pause_2h", "⏸️ Pause 2 hours", true, None::<&str>)?;
-    let pause_movie = MenuItem::with_id(app, "pause_movie", "🎬 Movie mode (8h)", true, None::<&str>)?;
-    let resume = MenuItem::with_id(app, "resume", "▶️ Resume", true, None::<&str>)?;
-    let separator2 = MenuItem::with_id(app, "sep2", "─────────────", false, None::<&str>)?;
+    // ===== Main Actions =====
+    let show = MenuItem::with_id(app, "show", "📊 Open Dashboard", true, None::<&str>)?;
+    let show_session = MenuItem::with_id(app, "show_session", "🏠 Session Hub", true, None::<&str>)?;
     
+    // ===== Session Controls =====
+    let start_session = MenuItem::with_id(app, "start_session", "▶️ Start Session", true, None::<&str>)?;
+    let end_session = MenuItem::with_id(app, "end_session", "⏹️ End Session", true, None::<&str>)?;
+    
+    // ===== Pause Options (in submenu) =====
+    let pause_15m = MenuItem::with_id(app, "pause_15m", "15 minutes", true, None::<&str>)?;
+    let pause_30m = MenuItem::with_id(app, "pause_30m", "30 minutes", true, None::<&str>)?;
+    let pause_1h = MenuItem::with_id(app, "pause_1h", "1 hour", true, None::<&str>)?;
+    let pause_2h = MenuItem::with_id(app, "pause_2h", "2 hours", true, None::<&str>)?;
+    let pause_movie = MenuItem::with_id(app, "pause_movie", "🎬 Movie mode (8h)", true, None::<&str>)?;
+    
+    let pause_submenu = Submenu::with_items(
+        app,
+        "⏸️ Pause Reminders",
+        true,
+        &[&pause_15m, &pause_30m, &pause_1h, &pause_2h, &pause_movie]
+    )?;
+    
+    let resume = MenuItem::with_id(app, "resume", "▶️ Resume Reminders", true, None::<&str>)?;
+    
+    // ===== App Controls =====
+    let settings = MenuItem::with_id(app, "settings", "⚙️ Settings", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Exit Aura", true, None::<&str>)?;
+    
+    // Build menu with proper separators
     let menu = Menu::with_items(app, &[
-        &show, 
-        &separator1,
-        &pause_30m,
-        &pause_1h, 
-        &pause_2h,
-        &pause_movie,
-        &resume, 
-        &separator2,
+        &show_session,
+        &show,
+        &PredefinedMenuItem::separator(app)?,
+        &start_session,
+        &end_session,
+        &PredefinedMenuItem::separator(app)?,
+        &pause_submenu,
+        &resume,
+        &PredefinedMenuItem::separator(app)?,
+        &settings,
         &quit
     ])?;
     
@@ -428,38 +455,52 @@ fn setup_tray(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 app.exit(0);
             }
             "show" => {
+                // Open main dashboard window
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+            "show_session" => {
                 if let Some(window) = app.get_webview_window("session") {
                     let _ = window.show();
                     let _ = window.set_focus();
                 }
             }
+            "settings" => {
+                // Navigate to settings - open main window with settings route
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    // Could emit event to navigate to settings
+                }
+            }
+            "start_session" => {
+                write_to_sidecar(app, serde_json::json!({"cmd": "start_session"}));
+                let _ = app.emit("sidecar-session_started", serde_json::json!({}));
+            }
+            "end_session" => {
+                write_to_sidecar(app, serde_json::json!({"cmd": "end_session"}));
+                let _ = app.emit("sidecar-session_ended", serde_json::json!({}));
+            }
+            "pause_15m" => {
+                write_to_sidecar(app, serde_json::json!({"cmd": "pause", "minutes": 15}));
+                let _ = app.emit("sidecar-paused", serde_json::json!({"minutes": 15}));
+            }
             "pause_30m" => {
-                write_to_sidecar(app, serde_json::json!({
-                    "cmd": "pause",
-                    "minutes": 30
-                }));
-                // Emit event to frontend so UI can update
+                write_to_sidecar(app, serde_json::json!({"cmd": "pause", "minutes": 30}));
                 let _ = app.emit("sidecar-paused", serde_json::json!({"minutes": 30}));
             }
             "pause_1h" => {
-                write_to_sidecar(app, serde_json::json!({
-                    "cmd": "pause",
-                    "minutes": 60
-                }));
+                write_to_sidecar(app, serde_json::json!({"cmd": "pause", "minutes": 60}));
                 let _ = app.emit("sidecar-paused", serde_json::json!({"minutes": 60}));
             }
             "pause_2h" => {
-                write_to_sidecar(app, serde_json::json!({
-                    "cmd": "pause",
-                    "minutes": 120
-                }));
+                write_to_sidecar(app, serde_json::json!({"cmd": "pause", "minutes": 120}));
                 let _ = app.emit("sidecar-paused", serde_json::json!({"minutes": 120}));
             }
             "pause_movie" => {
-                write_to_sidecar(app, serde_json::json!({
-                    "cmd": "pause",
-                    "minutes": 480
-                }));
+                write_to_sidecar(app, serde_json::json!({"cmd": "pause", "minutes": 480}));
                 let _ = app.emit("sidecar-paused", serde_json::json!({"minutes": 480}));
             }
             "resume" => {
@@ -556,6 +597,9 @@ fn start_sidecar(app: &AppHandle) {
                                 
                                 // Show overlay and emit event after delay
                                 if let Some(overlay) = app_for_events.get_webview_window("overlay") {
+                                    // Ensure decorations are off (Windows sometimes ignores config)
+                                    let _ = overlay.set_decorations(false);
+                                    let _ = overlay.set_title("");
                                     let _ = overlay.show();
                                     let _ = overlay.set_focus();
                                     

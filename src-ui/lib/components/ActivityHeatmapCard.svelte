@@ -5,12 +5,8 @@
 -->
 <script lang="ts">
     import { activityHeatmap } from "$lib/stores/analytics";
-    import { getActivityHeatmap } from "$lib/ipc";
-    import { onMount } from "svelte";
-
-    onMount(() => {
-        getActivityHeatmap(7);
-    });
+    // Note: Data is fetched by the parent page (+page.svelte) to avoid race conditions
+    // The parent sets up event listeners BEFORE requesting data
 
     // Helper to format date label
     function getDayLabel(dateStr: string): string {

@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD033 -->
 <div align="center">
 
-<img src="assets/Aura-logo-text.png" alt="Aura Logo" width="200">
+<img src="assets/Aura-logo-text.png" alt="Aura Logo" width="300">
 
 ### The Intelligent Wellness Companion for Developers
 
@@ -35,7 +35,7 @@
 
 <div align="center">
 
-<img src="assets/AnalyticsDashboard.png" width="80%">
+<img src="assets/AnalyticsDashboard.png" width="90%">
 
 </div>
 
@@ -58,8 +58,8 @@ Transform your wellness data into actionable insights with our completely redesi
 Personalized break notifications based on your actual work patterns — not arbitrary timers.
 
 - **20-20-20 Rule**: Eye rest reminders every 20 minutes
-- **Stretch Breaks**: Movement prompts every 45-60 minutes
-- **Active Time Tracking**: Timer pauses when you're idle, counts only real work time
+- **Stretch Breaks**: Movement prompts every 45-60 minutes (customizable duration)
+- **Wall Clock Mode**: Consistent break reminders based on real time (default)
 - **Immersive Mode Detection**: Auto-suppresses breaks during fullscreen apps (gaming, presentations)
 
 ### 💧 Intelligent Hydration
@@ -86,7 +86,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 
 <div align="center">
 
-<img src=".gemini/antigravity/brain/23fb6940-5b9b-48bc-9d6a-2d6d45f0611a/break_reminder_overlay_1768995281718.png" width="40%">
+<img src="assets/Overlay.png" width="40%">
 
 </div>
 
@@ -105,7 +105,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 <tr>
 <td width="50%" align="center">
 
-<img src="assets/SessionHub.png" width="100%">
+<img src="assets/SessionHub.png" width="70%">
 
 **Session Hub**  
 <sub>Your command center for work sessions</sub>
@@ -123,7 +123,7 @@ Beautiful, non-intrusive overlay notifications that respect your workflow.
 <tr>
 <td width="50%" align="center">
 
-<img src="assets/SmartOverlay.gif" width="80%">
+<img src="assets/SmartOverlay.gif" width="70%">
 
 **Smart Overlay**  
 <sub>Beautiful break notifications</sub>
@@ -301,13 +301,6 @@ We include robust build scripts that compile the Python engine into a standalone
 
 ## 💎 Advanced Features
 
-### Timer Modes
-
-Choose between two timing philosophies:
-
-- **Wall Clock Mode** (Default): Consistent break intervals based on real time
-- **Active Time Mode**: Breaks trigger only based on actual keyboard/mouse activity
-
 ### Work Session States
 
 Aura implements a proper finite state machine:
@@ -342,7 +335,7 @@ Create time-based rules to automate your workflow:
 <details>
 <summary><b>How does the break timer work?</b></summary>
 
-Aura tracks your **active work time** (configurable to wall-clock mode). When you step away from the computer (idle > 3 minutes), the timer pauses automatically in active-time mode. This means you get breaks based on actual screen time.
+Aura uses **wall-clock mode** by default — you get consistent break reminders at regular intervals regardless of activity. This ensures predictable, reliable wellness prompts throughout your workday.
 
 </details>
 
