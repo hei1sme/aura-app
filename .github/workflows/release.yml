@@ -68,7 +68,66 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'Aura ${{ github.ref_name }}'
           releaseBody: 'See the assets to download this version and install.'
-          draft: true
+          draft: false
           prerelease: false
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: true
+          updaterJsonKeepUniversal: true
+
+      - name: Generate latest.json for Updater
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          echo "Listing build artifacts..."
+          find src-tauri/target/release/bundle -type f -name "*.sig" || echo "No .sig files found"
+          find src-tauri/target/release/bundle -type f -name "*.exe" || echo "No .exe files found"
+          find src-tauri/target/release/bundle -type f -name "*.msi" || echo "No .msi files found"
+          
+          # Extract version number (remove 'v' prefix if present)
+          CLEAN_VERSION="${VERSION#v}"
+          
+          # Find the NSIS signature file first (preferred), fallback to MSI
+          SIG_FILE=$(find src-tauri/target/release/bundle/nsis -name "*.exe.sig" 2>/dev/null | head -n 1)
+          EXE_FILE=$(find src-tauri/target/release/bundle/nsis -name "*-setup.exe" 2>/dev/null | head -n 1)
+          
+          if [ -z "$SIG_FILE" ] || [ -z "$EXE_FILE" ]; then
+            echo "NSIS signature not found, trying MSI..."
+            SIG_FILE=$(find src-tauri/target/release/bundle/msi -name "*.msi.sig" 2>/dev/null | head -n 1)
+            EXE_FILE=$(find src-tauri/target/release/bundle/msi -name "*.msi" 2>/dev/null | head -n 1)
+          fi
+          
+          if [ -z "$SIG_FILE" ]; then
+            echo "::error::No signature file found! Check TAURI_SIGNING_PRIVATE_KEY"
+            echo "Available files in bundle:"
+            find src-tauri/target/release/bundle -type f
+            exit 1
+          fi
+          
+          echo "Found signature: $SIG_FILE"
+          echo "Found installer: $EXE_FILE"
+          
+          SIG_CONTENT=$(cat "$SIG_FILE")
+          FILENAME=$(basename "$EXE_FILE")
+          
+          # Create latest.json
+          cat > latest.json << EOF
+          {
+            "version": "$CLEAN_VERSION",
+            "notes": "Update to version $CLEAN_VERSION",
+            "pub_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "platforms": {
+              "windows-x86_64": {
+                "signature": "$SIG_CONTENT",
+                "url": "https://github.com/${{ github.repository }}/releases/download/$VERSION/$FILENAME"
+              }
+            }
+          }
+          EOF
+          
+          echo "Generated latest.json:"
+          cat latest.json
+
+      - name: Upload latest.json to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: latest.json
+          tag_name: ${{ github.ref_name }}
