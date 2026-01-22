@@ -11,6 +11,7 @@
         { id: "schedule", label: "Schedule", icon: "📅" },
         { id: "immersive", label: "Immersive", icon: "🎮" },
         { id: "data", label: "Data", icon: "🔒" },
+        { id: "about", label: "About", icon: "ℹ️" },
     ];
 
     function selectTab(id: string) {
@@ -39,7 +40,7 @@
             <span class="text-xl">{tab.icon}</span>
             <span class="font-medium">{tab.label}</span>
             {#if activeTab === tab.id}
-                <div class="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                <div class="ml-auto w-1.5 h-1.5 rounded-full bg-primary"></div>
             {/if}
         </button>
     {/each}

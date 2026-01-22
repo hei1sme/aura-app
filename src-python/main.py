@@ -68,7 +68,7 @@ class AuraEngine:
     - Interruptible sleep for clean shutdown (no STATUS_CONTROL_C_EXIT)
     """
 
-    VERSION = "1.4.0"
+    APP_VERSION = "1.5.0"
     TARGET_FRAME_TIME = 0.1  # 100ms tick rate for responsive loop
     METRICS_BROADCAST_INTERVAL = 1.0  # seconds
     IDLE_ZERO_THRESHOLD = 1.0  # Force zero after 1 second of no input
@@ -617,7 +617,7 @@ class AuraEngine:
         input_thread.start()
 
         # Emit ready event
-        self._emit("ready", {"version": self.VERSION, "db_path": self._db.db_path})
+        self._emit("ready", {"version": self.APP_VERSION, "db_path": self._db.db_path})
 
         # Broadcast initial status
         self._broadcast_status()

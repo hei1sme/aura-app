@@ -5,7 +5,7 @@
 
 ### The Intelligent Wellness Companion for Developers
 
-[![Version](https://img.shields.io/badge/Version-1.4.0-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.0-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.70%2B-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/ )
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-FF3E00?style=flat-square&logo=svelte&logoColor=white)](https://kit.svelte.dev)
@@ -25,29 +25,22 @@
 
 <div align="center">
 
-📊 **Enterprise Analytics** &nbsp;•&nbsp; 👁️ **Smart Eye Care** &nbsp;•&nbsp; 💧 **Hydration Tracking** &nbsp;•&nbsp; 🧘 **Stretch Reminders** &nbsp;•&nbsp; 📅 **Flexible Scheduling**
+📊 **Enterprise Analytics** &nbsp;•&nbsp; ⚡ **Auto-Updates** &nbsp;•&nbsp; 👁️ **Smart Eye Care** &nbsp;•&nbsp; 💧 **Hydration Tracking** &nbsp;•&nbsp; 🧘 **Stretch Reminders**
 
 </div>
 
 ---
 
-## 🎯 What's New in v1.4.0
+## 🎯 What's New in v1.5.0
 
-<div align="center">
+### ⚡ Seamless Auto-Update System
 
-<img src="assets/AnalyticsDashboard.png" width="90%">
+Stay up-to-date effortlessly with our new robust update engine:
 
-</div>
-
-### 📊 Enterprise-Level Analytics Dashboard
-
-Transform your wellness data into actionable insights with our completely redesigned analytics-focused dashboard:
-
-- **Break Compliance Tracking** - Visual breakdown of completed, skipped, and snoozed breaks with trend analysis
-- **Hydration Analytics** - 7-day intake trends with goal achievement tracking
-- **Activity Patterns** - Real-time keyboard (keys/min) and mouse velocity charts
-- **Work Session Analytics** - Comprehensive tracking of your productivity patterns
-- **One-Click Controls** - Instant pause/resume toggle for seamless workflow management
+- **One-Click Updates** - Check for, download, and install updates directly from the app.
+- **Secure & Signed** - Every update is cryptographically verified for your safety.
+- **New About Section** - Integrated hub for app info, version checking, and update management.
+- **Background Delivery** - Updates download silently without interrupting your flow.
 
 ---
 
@@ -397,7 +390,7 @@ We welcome contributions! Please check the [Issues](https://github.com/hei1sme/a
 
 ## 📋 Changelog
 
-See [CHANGELOG_v1.4.0.md](docs/CHANGELOG_v1.4.0.md) for the latest release notes.
+See [CHANGELOG_v1.5.0.md](docs/CHANGELOG/CHANGELOG_v1.5.0.md) for the latest release notes.
 
 ---
 

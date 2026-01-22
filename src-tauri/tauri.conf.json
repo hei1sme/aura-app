@@ -1,111 +1,117 @@
 {
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Aura",
-  "version": "1.4.0",
-  "identifier": "com.aura.wellness",
-  "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
-    "frontendDist": "../build"
-  },
-  "app": {
-    "withGlobalTauri": true,
-    "windows": [
-      {
-        "title": "Aura - Session Hub",
-        "label": "session",
-        "url": "/session",
-        "width": 400,
-        "height": 510,
-        "minWidth": 350,
-        "minHeight": 350,
-        "resizable": false,
-        "transparent": false,
-        "decorations": true,
-        "center": true,
-        "visible": true
-      },
-      {
-        "title": "Aura - Wellness Companion",
-        "label": "main",
-        "url": "/",
-        "width": 1100,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600,
-        "resizable": true,
-        "transparent": false,
-        "decorations": true,
-        "center": true,
-        "visible": false
-      },
-      {
-        "title": "",
-        "label": "overlay",
-        "url": "/overlay",
-        "width": 450,
-        "height": 550,
-        "alwaysOnTop": true,
-        "transparent": true,
-        "decorations": false,
-        "resizable": false,
-        "skipTaskbar": true,
-        "visible": false,
-        "focus": true,
-        "center": true,
-        "shadow": false
-      },
-      {
-        "title": "Aura Notification",
-        "label": "notification",
-        "url": "/notification",
-        "width": 280,
-        "height": 320,
-        "alwaysOnTop": true,
-        "transparent": true,
-        "decorations": false,
-        "resizable": false,
-        "skipTaskbar": true,
-        "visible": false,
-        "focus": false,
-        "center": false,
-        "shadow": false
-      }
-    ],
-    "security": {
-      "csp": null
+    "$schema": "https://schema.tauri.app/config/2",
+    "productName": "Aura",
+    "version": "1.5.0",
+    "identifier": "com.aura.wellness",
+    "build": {
+        "beforeDevCommand": "npm run dev",
+        "devUrl": "http://localhost:1420",
+        "beforeBuildCommand": "npm run build",
+        "frontendDist": "../build"
     },
-    "trayIcon": {
-      "iconPath": "icons/icon.png",
-      "iconAsTemplate": true
+    "app": {
+        "withGlobalTauri": true,
+        "windows": [
+            {
+                "title": "Aura - Session Hub",
+                "label": "session",
+                "url": "/session",
+                "width": 400,
+                "height": 510,
+                "minWidth": 350,
+                "minHeight": 350,
+                "resizable": false,
+                "transparent": false,
+                "decorations": true,
+                "center": true,
+                "visible": true
+            },
+            {
+                "title": "Aura - Wellness Companion",
+                "label": "main",
+                "url": "/",
+                "width": 1100,
+                "height": 800,
+                "minWidth": 800,
+                "minHeight": 600,
+                "resizable": true,
+                "transparent": false,
+                "decorations": true,
+                "center": true,
+                "visible": false
+            },
+            {
+                "title": "",
+                "label": "overlay",
+                "url": "/overlay",
+                "width": 450,
+                "height": 550,
+                "alwaysOnTop": true,
+                "transparent": true,
+                "decorations": false,
+                "resizable": false,
+                "skipTaskbar": true,
+                "visible": false,
+                "focus": true,
+                "center": true,
+                "shadow": false
+            },
+            {
+                "title": "Aura Notification",
+                "label": "notification",
+                "url": "/notification",
+                "width": 280,
+                "height": 320,
+                "alwaysOnTop": true,
+                "transparent": true,
+                "decorations": false,
+                "resizable": false,
+                "skipTaskbar": true,
+                "visible": false,
+                "focus": false,
+                "center": false,
+                "shadow": false
+            }
+        ],
+        "security": {
+            "csp": null
+        },
+        "trayIcon": {
+            "iconPath": "icons/icon.png",
+            "iconAsTemplate": true
+        }
+    },
+    "bundle": {
+        "active": true,
+        "targets": [
+            "nsis",
+            "msi"
+        ],
+        "icon": [
+            "icons/32x32.png",
+            "icons/128x128.png",
+            "icons/128x128@2x.png",
+            "icons/icon.icns",
+            "icons/icon.ico"
+        ],
+        "externalBin": [
+            "aura-sidecar"
+        ],
+        "windows": {
+            "certificateThumbprint": null,
+            "digestAlgorithm": "sha256",
+            "timestampUrl": ""
+        }
+    },
+    "plugins": {
+        "shell": {
+            "open": true
+        },
+        "updater": {
+            "endpoints": [
+                "https://github.com/hei1sme/aura-app/releases/latest/download/latest.json"
+            ],
+            "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDg3NzlEOTMwNzVCNDU5ODYKUldTR1diUjFNTmw1aDRWWkxwUy9VcWJCdVNDdm9ZMXFTL1lzNHdqRWcwYytTNU9CWndsbXAwMk8K"
+        }
     }
-  },
-  "bundle": {
-    "active": true,
-    "targets": [
-      "nsis",
-      "msi"
-    ],
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ],
-    "externalBin": [
-      "aura-sidecar"
-    ],
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": ""
-    }
-  },
-  "plugins": {
-    "shell": {
-      "open": true
-    }
-  }
 }

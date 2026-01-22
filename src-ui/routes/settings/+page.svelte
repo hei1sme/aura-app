@@ -21,6 +21,7 @@
   import SettingsSchedule from "$lib/components/settings/SettingsSchedule.svelte";
   import SettingsImmersive from "$lib/components/settings/SettingsImmersive.svelte";
   import SettingsData from "$lib/components/settings/SettingsData.svelte";
+  import SettingsAbout from "$lib/components/settings/SettingsAbout.svelte";
 
   // State
   let activeTab = "general";
@@ -111,6 +112,22 @@
     } catch (e) {
       console.error("Failed to load settings:", e);
     }
+
+    // Check URL params for initial tab
+    const tabParam = $page.url.searchParams.get("tab");
+    if (
+      tabParam &&
+      [
+        "general",
+        "wellness",
+        "schedule",
+        "immersive",
+        "data",
+        "about",
+      ].includes(tabParam)
+    ) {
+      activeTab = tabParam;
+    }
   });
 
   onDestroy(() => {
@@ -174,6 +191,8 @@
             <SettingsImmersive {settings} />
           {:else if activeTab === "data"}
             <SettingsData />
+          {:else if activeTab === "about"}
+            <SettingsAbout />
           {/if}
         </div>
       {/if}

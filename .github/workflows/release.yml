@@ -1,0 +1,84 @@
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest]
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies (frontend)
+        run: npm install
+
+      - name: Build the app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Aura ${{ github.ref_name }}'
+          releaseBody: 'See the assets to download this version and install.'
+          draft: true
+          prerelease: false
+
+      - name: Generate latest.json for Updater
+        shell: bash
+        env:
+          VERSION: ${{ github.ref_name }}
+        run: |
+          # Extract version number (remove 'v' prefix if present)
+          CLEAN_VERSION="${VERSION#v}"
+          
+          # Find the signature file
+          SIG_FILE=$(find src-tauri/target/release/bundle/msi -name "*.msi.sig" | head -n 1)
+          MSI_FILE=$(find src-tauri/target/release/bundle/msi -name "*.msi" | head -n 1)
+          
+          if [ -z "$SIG_FILE" ]; then
+            echo "Signature file not found!"
+            exit 1
+          fi
+          
+          SIG_CONTENT=$(cat "$SIG_FILE")
+          FILENAME=$(basename "$MSI_FILE")
+          
+          # Create latest.json
+          cat <<EOF > latest.json
+          {
+            "version": "$CLEAN_VERSION",
+            "notes": "Update for version $CLEAN_VERSION",
+            "pub_date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "platforms": {
+              "windows-x86_64": {
+                "signature": "$SIG_CONTENT",
+                "url": "https://github.com/${{ github.repository }}/releases/download/$VERSION/$FILENAME"
+              }
+            }
+          }
+          EOF
+
+      - name: Upload latest.json to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: latest.json
+          draft: true
