@@ -670,7 +670,37 @@ class DatabaseManager:
                 })
             return heatmap
 
+    def cleanup_old_activity_samples(self, days: int = 30) -> int:
+        """
+        Remove periodic activity samples older than N days.
+        
+        Only removes samples with user_response=NULL (periodic samples).
+        Labeled samples (break responses with user_response=0 or 1) are preserved
+        for ML training purposes.
+        
+        Args:
+            days: Number of days to keep (default 30)
+            
+        Returns:
+            Number of records deleted
+        """
+        import time
+        
+        cutoff = int(time.time()) - (days * 86400)
+        
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                DELETE FROM training_data 
+                WHERE timestamp < ? AND user_response IS NULL
+                """,
+                (cutoff,),
+            )
+            return cursor.rowcount
+
     # ==================== Schedule Rules Methods ====================
+
 
     def add_schedule_rule(
         self, time: str, action: str, days: List[str], title: str = ""

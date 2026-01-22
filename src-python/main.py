@@ -68,11 +68,12 @@ class AuraEngine:
     - Interruptible sleep for clean shutdown (no STATUS_CONTROL_C_EXIT)
     """
 
-    APP_VERSION = "1.5.3"
+    APP_VERSION = "1.5.4"
     TARGET_FRAME_TIME = 0.1  # 100ms tick rate for responsive loop
     METRICS_BROADCAST_INTERVAL = 1.0  # seconds
     IDLE_ZERO_THRESHOLD = 1.0  # Force zero after 1 second of no input
     SHUTDOWN_CHECK_INTERVAL = 0.05  # 50ms granularity for shutdown checks
+    ACTIVITY_SAMPLE_INTERVAL = 300.0  # 5 minutes - periodic activity sampling for heatmap
 
     def __init__(self, db: Optional[DatabaseManager] = None):
         """
@@ -130,7 +131,20 @@ class AuraEngine:
         self._forced_zero_velocity: float = 0.0
         self._forced_zero_keys: int = 0
 
+        # Periodic activity sampling for heatmap visualization
+        self._last_activity_sample_time = time.perf_counter()
+
+        # Cleanup old periodic samples on startup (keeps last 30 days)
+        try:
+            deleted = self._db.cleanup_old_activity_samples(days=30)
+            if deleted > 0:
+                import sys
+                print(f"[Engine] Cleaned up {deleted} old activity samples", file=sys.stderr, flush=True)
+        except Exception:
+            pass  # Don't fail startup if cleanup fails
+
     def _emit(self, event_type: str, data: Optional[Dict[str, Any]] = None) -> None:
+
         """
         Emit a JSON event to stdout for Tauri to receive.
 
@@ -253,7 +267,34 @@ class AuraEngine:
             },
         )
 
+    def _record_periodic_sample(self) -> None:
+        """
+        Record an activity sample for heatmap visualization.
+        
+        Called every ACTIVITY_SAMPLE_INTERVAL (5 minutes) when user is ACTIVE.
+        This data is stored with user_response=NULL to differentiate from
+        break-triggered samples (which have user_response=0 or 1).
+        
+        This improves heatmap accuracy by providing continuous activity data
+        rather than only sampling when breaks occur.
+        """
+        metrics = self._monitor.get_metrics()
+        
+        # Only record if user is actually active (has recent input)
+        if metrics.state == ActivityState.IDLE:
+            return
+        
+        # Record sample (user_response=NULL for periodic samples)
+        # We don't track the record_id since there's no label to add later
+        self._collector.record_activity_snapshot(
+            mouse_velocity=metrics.mouse_velocity,
+            keys_per_min=metrics.keys_per_min,
+            active_process=metrics.active_process,
+            is_fullscreen=metrics.is_fullscreen,
+        )
+
     def _handle_command(self, cmd: Dict[str, Any]) -> None:
+
         """
         Handle a command from the frontend.
 
@@ -668,6 +709,14 @@ class AuraEngine:
 
                     # Reset accumulator
                     frame_accumulator = 0.0
+
+                    # Periodic activity sampling for heatmap visualization
+                    # This runs inside the 1-second update block to use is_active flag
+                    now_sample = time.perf_counter()
+                    if now_sample - self._last_activity_sample_time >= self.ACTIVITY_SAMPLE_INTERVAL:
+                        if is_active:  # Only sample when user is active
+                            self._record_periodic_sample()
+                        self._last_activity_sample_time = now_sample
 
                 # Broadcast metrics periodically (uses its own timer)
                 self._broadcast_metrics()

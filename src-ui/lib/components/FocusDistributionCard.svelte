@@ -8,6 +8,14 @@
     // Note: Data is fetched by the parent page (+page.svelte) to avoid race conditions
     // The parent sets up event listeners BEFORE requesting data
 
+    // Hover state for tooltip
+    let hoveredSegment: {
+        name: string;
+        count: number;
+        percentage: number;
+        color: string;
+    } | null = null;
+
     $: total = Object.values($focusStats).reduce((a, b) => a + b, 0);
 
     $: categories = Object.entries($focusStats)
@@ -105,20 +113,40 @@
                     viewBox="0 0 100 100"
                     class="w-full h-full transform -rotate-90"
                 >
-                    {#each chartData as segment}
-                        <circle
-                            cx="50"
-                            cy="50"
-                            r="40"
-                            fill="transparent"
-                            stroke={segment.color}
-                            stroke-width="12"
-                            stroke-dasharray={segment.strokeDasharray}
-                            stroke-dashoffset={segment.strokeDashoffset}
-                            stroke-linecap="round"
-                            class="transition-all duration-1000 ease-out"
-                            opacity="0.9"
-                        />
+                    {#each chartData as segment, i}
+                        <g class="segment-group">
+                            <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                                stroke={segment.color}
+                                stroke-width="12"
+                                stroke-dasharray={segment.strokeDasharray}
+                                stroke-dashoffset={segment.strokeDashoffset}
+                                stroke-linecap="round"
+                                class="transition-all duration-1000 ease-out segment-circle"
+                                opacity="0.9"
+                            />
+                            <!-- Invisible larger circle for hover detection -->
+                            <circle
+                                cx="50"
+                                cy="50"
+                                r="40"
+                                fill="transparent"
+                                stroke="transparent"
+                                stroke-width="18"
+                                stroke-dasharray={segment.strokeDasharray}
+                                stroke-dashoffset={segment.strokeDashoffset}
+                                class="hover-target"
+                                role="img"
+                                aria-label="{segment.name}: {Math.round(
+                                    segment.percentage,
+                                )}%"
+                                on:mouseenter={() => (hoveredSegment = segment)}
+                                on:mouseleave={() => (hoveredSegment = null)}
+                            />
+                        </g>
                     {/each}
 
                     <!-- Hole (Background ring for decoration) -->
@@ -131,6 +159,30 @@
                         stroke-width="12"
                     />
                 </svg>
+
+                <!-- Hover Tooltip -->
+                {#if hoveredSegment}
+                    <div
+                        class="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    >
+                        <div
+                            class="bg-gray-900/95 px-3 py-2 rounded-lg text-center border border-white/20 shadow-xl"
+                        >
+                            <div
+                                class="text-xs font-medium"
+                                style="color: {hoveredSegment.color}"
+                            >
+                                {hoveredSegment.name}
+                            </div>
+                            <div class="text-lg font-bold">
+                                {Math.round(hoveredSegment.percentage)}%
+                            </div>
+                            <div class="text-[10px] opacity-60">
+                                {hoveredSegment.count} samples
+                            </div>
+                        </div>
+                    </div>
+                {/if}
 
                 <!-- Center Text -->
                 <div

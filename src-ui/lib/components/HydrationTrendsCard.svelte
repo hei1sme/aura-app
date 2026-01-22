@@ -9,6 +9,15 @@
     import { hydrationHistory } from "$lib/stores/analytics";
     import { logHydration } from "$lib/ipc";
 
+    // Hover state for tooltip
+    let hoveredPoint: {
+        val: number;
+        goal: number;
+        day: string;
+        x: number;
+        y: number;
+    } | null = null;
+
     const quickAmounts = [
         { amount: 100, label: "100ml", emoji: "💧" },
         { amount: 250, label: "250ml", emoji: "🥤" },
@@ -209,13 +218,62 @@
                     <circle
                         cx={xScale(i)}
                         cy={yScale(d.val)}
-                        r={i === 6 ? 3 : 2}
+                        r={i === 6 ? 4 : 3}
                         fill={i === 6
                             ? "var(--aura-hydration)"
                             : "rgba(255,255,255,0.8)"}
-                        class="data-point"
+                        class="data-point cursor-pointer"
+                        role="img"
+                        aria-label="{dayLabels[i]}: {d.val}ml"
+                        on:mouseenter={() => {
+                            hoveredPoint = {
+                                val: d.val,
+                                goal: d.goal,
+                                day: dayLabels[i],
+                                x: xScale(i),
+                                y: yScale(d.val),
+                            };
+                        }}
+                        on:mouseleave={() => (hoveredPoint = null)}
                     />
                 {/each}
+
+                <!-- Hover Tooltip -->
+                {#if hoveredPoint}
+                    <g
+                        transform="translate({hoveredPoint.x}, {hoveredPoint.y -
+                            10})"
+                    >
+                        <rect
+                            x="-30"
+                            y="-32"
+                            width="60"
+                            height="28"
+                            rx="4"
+                            fill="rgba(17, 24, 39, 0.95)"
+                            stroke="rgba(255,255,255,0.2)"
+                            stroke-width="1"
+                        />
+                        <text
+                            x="0"
+                            y="-20"
+                            text-anchor="middle"
+                            fill="var(--aura-hydration)"
+                            font-size="10"
+                            font-weight="600">{hoveredPoint.val}ml</text
+                        >
+                        <text
+                            x="0"
+                            y="-9"
+                            text-anchor="middle"
+                            fill="rgba(255,255,255,0.6)"
+                            font-size="8"
+                            >{Math.round(
+                                (hoveredPoint.val / hoveredPoint.goal) * 100,
+                            )}% of goal</text
+                        >
+                    </g>
+                {/if}
             </svg>
 
             <!-- X-Axis Labels -->

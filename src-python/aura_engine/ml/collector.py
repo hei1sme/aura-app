@@ -145,9 +145,75 @@ class DataCollector:
         self._last_break_time: int = int(time.time())
         self._pending_record_id: Optional[int] = None
     
+    # Keywords for smart app categorization (more flexible than exact mapping)
+    CATEGORY_KEYWORDS = {
+        AppCategory.CODE: [
+            # IDEs and Code Editors
+            "code", "vscode", "studio", "idea", "pycharm", "webstorm", "phpstorm",
+            "goland", "rider", "clion", "rubymine", "datagrip", "android",
+            "sublime", "atom", "vim", "nvim", "neovim", "emacs", "notepad++",
+            "cursor", "zed", "fleet", "brackets", "textmate", "bbedit",
+            # Dev tools
+            "terminal", "powershell", "cmd", "bash", "wsl", "git", "docker",
+            "postman", "insomnia", "dbeaver", "mongodb", "redis", "mysql",
+            "pgadmin", "datagrip", "azure", "aws", "gcloud",
+        ],
+        AppCategory.WEB: [
+            # Browsers
+            "chrome", "firefox", "edge", "msedge", "brave", "opera", "safari",
+            "vivaldi", "arc", "tor", "chromium", "browser", "waterfox", "librewolf",
+        ],
+        AppCategory.COMMUNICATION: [
+            # Chat & Video
+            "discord", "slack", "teams", "zoom", "skype", "telegram", "whatsapp",
+            "messenger", "signal", "viber", "line", "wechat", "kakaotalk",
+            "meet", "webex", "gotomeeting", "bluejeans",
+            # Email
+            "outlook", "thunderbird", "mailspring", "mailbird", "spark",
+        ],
+        AppCategory.PRODUCTIVITY: [
+            # Office
+            "word", "excel", "powerpoint", "onenote", "access",
+            "libreoffice", "openoffice", "wps", "docs", "sheets", "slides",
+            # Note-taking & Knowledge
+            "notion", "obsidian", "evernote", "roam", "logseq", "joplin",
+            "bear", "ulysses", "typora", "marktext", "zettlr",
+            # Task & Project
+            "todoist", "ticktick", "things", "omnifocus", "asana", "trello",
+            "monday", "clickup", "basecamp", "linear", "jira", "confluence",
+            # Design
+            "figma", "sketch", "xd", "photoshop", "illustrator", "canva",
+            "affinity", "gimp", "inkscape", "blender",
+        ],
+        AppCategory.VIDEO: [
+            # Players
+            "vlc", "mpv", "potplayer", "mpc", "kmplayer", "gom", "daum",
+            "wmplayer", "quicktime", "iina", "infuse",
+            # Streaming
+            "obs", "streamlabs", "xsplit", "nvidia broadcast",
+            # Video editing
+            "premiere", "davinci", "resolve", "filmora", "shotcut", "kdenlive",
+            "capcut", "finalcut", "imovie", "vegas",
+        ],
+        AppCategory.GAME: [
+            # Launchers
+            "steam", "epic", "origin", "uplay", "ubisoft", "battlenet", "gog",
+            "riotclient", "eadesktop", "xbox", "playnite",
+            # Popular games
+            "league", "valorant", "csgo", "cs2", "dota", "overwatch",
+            "minecraft", "fortnite", "apex", "pubg", "genshin", "honkai",
+            "roblox", "among", "rocket", "fifa", "pes", "nba", "cod",
+            "warzone", "destiny", "halo", "starcraft", "hearthstone",
+            "diablo", "world of warcraft", "wow", "ffxiv", "gta", "elden",
+        ],
+    }
+    
     def categorize_app(self, process_name: str) -> str:
         """
-        Categorize an application by its process name.
+        Categorize an application by its process name using smart keyword detection.
+        
+        Uses keyword matching instead of exact process name mapping for better
+        coverage and flexibility. Falls back to hardcoded map for exact matches.
         
         Args:
             process_name: The name of the process (e.g., "code.exe")
@@ -159,8 +225,19 @@ class DataCollector:
             return AppCategory.OTHER.value
         
         process_lower = process_name.lower()
-        category = self.APP_CATEGORY_MAP.get(process_lower, AppCategory.OTHER)
-        return category.value
+        
+        # First try exact match from hardcoded map (for backward compatibility)
+        if process_lower in self.APP_CATEGORY_MAP:
+            return self.APP_CATEGORY_MAP[process_lower].value
+        
+        # Smart keyword detection
+        for category, keywords in self.CATEGORY_KEYWORDS.items():
+            for keyword in keywords:
+                if keyword in process_lower:
+                    return category.value
+        
+        return AppCategory.OTHER.value
+
     
     def record_activity_snapshot(
         self,

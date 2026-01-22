@@ -7,6 +7,16 @@
         getComplianceRate,
     } from "$lib/stores/analytics";
 
+    // Hover state for tooltip
+    let hoveredBar: {
+        day: string;
+        completed: number;
+        skipped: number;
+        snoozed: number;
+        total: number;
+        x: number;
+    } | null = null;
+
     // Calculate overall compliance rate from stats (aggregated)
     $: totalStats = (() => {
         let completed = 0;
@@ -117,15 +127,27 @@
     </div>
 
     <!-- 7-Day Bar Chart -->
-    <div class="chart-area">
-        {#each chartData as d}
-            <div class="bar-group">
+    <div class="chart-area relative" on:mouseleave={() => (hoveredBar = null)}>
+        {#each chartData as d, i}
+            <div
+                class="bar-group"
+                role="img"
+                aria-label="{d.day}: {d.completed} completed, {d.snoozed} snoozed, {d.skipped} skipped"
+                on:mouseenter={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const parentRect =
+                        e.currentTarget.parentElement?.getBoundingClientRect();
+                    hoveredBar = {
+                        ...d,
+                        x: rect.left - (parentRect?.left || 0) + rect.width / 2,
+                    };
+                }}
+            >
                 <div class="bars">
                     <!-- Completed Bar (Green) -->
                     <div
                         class="bar bar-completed"
                         style="height: {(d.completed / maxTotal) * 100}%"
-                        title="{d.completed} Completed"
                     ></div>
 
                     <!-- Snoozed Bar (Amber - pushed up by completed) -->
@@ -133,7 +155,6 @@
                         class="bar bar-snoozed"
                         style="height: {(d.snoozed / maxTotal) *
                             100}%; bottom: {(d.completed / maxTotal) * 100}%"
-                        title="{d.snoozed} Snoozed"
                     ></div>
 
                     <!-- Skipped Bar (Red - pushed up by others) -->
@@ -143,15 +164,39 @@
                             100}%; bottom: {((d.completed + d.snoozed) /
                             maxTotal) *
                             100}%"
-                        title="{d.skipped} Skipped"
                     ></div>
                 </div>
                 <span class="day-label">{d.day}</span>
             </div>
         {/each}
+
+        <!-- Hover Tooltip -->
+        {#if hoveredBar}
+            <div
+                class="absolute -top-2 transform -translate-x-1/2 -translate-y-full z-50 pointer-events-none"
+                style="left: {hoveredBar.x}px"
+            >
+                <div
+                    class="bg-gray-900/95 px-3 py-2 rounded-lg text-center border border-white/20 shadow-xl whitespace-nowrap"
+                >
+                    <div class="text-xs font-medium opacity-80 mb-1">
+                        {hoveredBar.day}
+                    </div>
+                    <div class="flex gap-3 text-[11px]">
+                        <span class="text-success"
+                            >✓ {hoveredBar.completed}</span
+                        >
+                        <span class="text-warning">⏸ {hoveredBar.snoozed}</span
+                        >
+                        <span class="text-error">✕ {hoveredBar.skipped}</span>
+                    </div>
+                </div>
+            </div>
+        {/if}
     </div>
 
     <!-- Legend -->
+
     <div class="flex items-center justify-center gap-4 mt-3 text-xs opacity-70">
         <div class="flex items-center gap-1">
             <div class="w-2 h-2 rounded-sm bg-success"></div>
