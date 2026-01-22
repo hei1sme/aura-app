@@ -2,8 +2,12 @@
     import { createEventDispatcher } from "svelte";
     import { relaunch } from "@tauri-apps/plugin-process";
     import { fade, scale } from "svelte/transition";
+    import { marked } from "marked";
 
     export let updateData: any = null;
+
+    // Parse markdown content
+    $: parsedBody = updateData?.body ? marked.parse(updateData.body) : "";
 
     const dispatch = createEventDispatcher();
 
@@ -92,9 +96,7 @@
                     stroke="currentColor"
                     stroke-width="2"
                 >
-                    <path
-                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                    />
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="7 10 12 15 17 10" />
                     <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
@@ -112,8 +114,8 @@
         {#if updateData?.body}
             <div class="release-notes">
                 <h4>What's New</h4>
-                <div class="notes-content">
-                    {updateData.body}
+                <div class="notes-content markdown-body">
+                    {@html parsedBody}
                 </div>
             </div>
         {/if}
@@ -145,7 +147,10 @@
         <!-- Actions -->
         <div class="modal-actions">
             {#if installComplete}
-                <button class="btn btn-primary full-width" on:click={handleRestart}>
+                <button
+                    class="btn btn-primary full-width"
+                    on:click={handleRestart}
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
@@ -155,9 +160,7 @@
                         class="btn-icon"
                     >
                         <path d="M23 4v6h-6" />
-                        <path
-                            d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"
-                        />
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                     </svg>
                     Restart Now
                 </button>
@@ -173,9 +176,7 @@
                         stroke-width="2"
                         class="btn-icon"
                     >
-                        <path
-                            d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                        />
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" y1="15" x2="12" y2="3" />
                     </svg>
@@ -282,10 +283,94 @@
         font-size: 0.875rem;
         color: rgba(255, 255, 255, 0.8);
         line-height: 1.6;
-        max-height: 150px;
+        max-height: 300px;
         overflow-y: auto;
-        white-space: pre-wrap;
+        /* white-space: pre-wrap; Removed to allow HTML rendering */
+        font-family:
+            ui-sans-serif,
+            system-ui,
+            -apple-system,
+            BlinkMacSystemFont,
+            "Segoe UI",
+            Roboto,
+            "Helvetica Neue",
+            Arial,
+            sans-serif;
+        padding-right: 0.5rem;
+    }
+
+    /* Markdown Styles */
+    :global(.markdown-body h1),
+    :global(.markdown-body h2),
+    :global(.markdown-body h3) {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+    }
+
+    :global(.markdown-body h4) {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #06b6d4;
+        margin-top: 0.75rem;
+        margin-bottom: 0.25rem;
+    }
+
+    :global(.markdown-body ul) {
+        margin: 0.5rem 0;
+        padding-left: 1.25rem;
+        list-style-type: disc;
+    }
+
+    :global(.markdown-body li) {
+        margin-bottom: 0.25rem;
+    }
+
+    :global(.markdown-body strong) {
+        color: #fff;
+        font-weight: 600;
+    }
+
+    :global(.markdown-body code) {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.1rem 0.3rem;
+        border-radius: 4px;
         font-family: ui-monospace, monospace;
+        font-size: 0.8em;
+    }
+
+    :global(.markdown-body p) {
+        margin-bottom: 0.75rem;
+    }
+
+    :global(.markdown-body a) {
+        color: #3b82f6;
+        text-decoration: none;
+    }
+
+    :global(.markdown-body a:hover) {
+        text-decoration: underline;
+    }
+
+    /* Custom Scrollbar */
+    .notes-content::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .notes-content::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 3px;
+    }
+
+    .notes-content::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+    }
+
+    .notes-content::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
     }
 
     .error-message {

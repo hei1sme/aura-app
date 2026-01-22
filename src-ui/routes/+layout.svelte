@@ -24,6 +24,29 @@
   let showUpdateModal = false;
   let updateData: any = null;
 
+  async function fetchChangelog(version: string): Promise<string | null> {
+    try {
+      const url = `https://raw.githubusercontent.com/hei1sme/aura-app/main/docs/CHANGELOG/CHANGELOG_v${version}.md`;
+      console.log(`[Aura] Fetching changelog from ${url}`);
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        console.warn(
+          `[Aura] Failed to fetch changelog: ${response.statusText}`,
+        );
+        return null;
+      }
+
+      const text = await response.text();
+      // Remove the first line (Title) as it usually repeats the version
+      const content = text.replace(/^# Changelog v.*[\r\n]+/, "").trim();
+      return content;
+    } catch (e) {
+      console.error("[Aura] Error fetching changelog:", e);
+      return null;
+    }
+  }
+
   async function checkForUpdates() {
     try {
       // Check user preference
@@ -49,6 +72,15 @@
         }
 
         console.log("[Aura] Update available:", update.version);
+
+        // Fetch real changelog
+        const changelog = await fetchChangelog(update.version);
+        if (changelog) {
+          (update as any).body = changelog;
+        } else if (!update.body) {
+          (update as any).body = `Update to version ${update.version}`;
+        }
+
         updateData = update;
         showUpdateModal = true;
       } else {
