@@ -5,7 +5,7 @@
 
 ### The Intelligent Wellness Companion for Developers
 
-[![Version](https://img.shields.io/badge/Version-1.5.0-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.2-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.70%2B-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/ )
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-FF3E00?style=flat-square&logo=svelte&logoColor=white)](https://kit.svelte.dev)
@@ -31,16 +31,15 @@
 
 ---
 
-## 🎯 What's New in v1.5.0
+## 🎯 What's New
 
-### ⚡ Seamless Auto-Update System
+Aura is constantly improving! Check out our latest updates:
 
-Stay up-to-date effortlessly with our new robust update engine:
+- **[v1.5.2](docs/CHANGELOG/CHANGELOG_v1.5.2.md)** - Bug fixes for version display across all app entry points
+- **[v1.5.1](docs/CHANGELOG/CHANGELOG_v1.5.1.md)** - Auto-update on startup, Skip Version feature, Update preferences
+- **[v1.5.0](docs/CHANGELOG/CHANGELOG_v1.5.0.md)** - Seamless auto-update system with one-click updates
 
-- **One-Click Updates** - Check for, download, and install updates directly from the app.
-- **Secure & Signed** - Every update is cryptographically verified for your safety.
-- **New About Section** - Integrated hub for app info, version checking, and update management.
-- **Background Delivery** - Updates download silently without interrupting your flow.
+📋 See [all changelogs](docs/CHANGELOG/) for complete release history.
 
 ---
 
@@ -288,7 +287,7 @@ We include robust build scripts that compile the Python engine into a standalone
 
 </details>
 
-**Output**: `src-tauri/target/release/bundle/nsis/Aura_1.4.0_x64-setup.exe`
+**Output**: `src-tauri/target/release/bundle/nsis/Aura_1.5.2_x64-setup.exe`
 
 ---
 
@@ -390,7 +389,7 @@ We welcome contributions! Please check the [Issues](https://github.com/hei1sme/a
 
 ## 📋 Changelog
 
-See [CHANGELOG_v1.5.0.md](docs/CHANGELOG/CHANGELOG_v1.5.0.md) for the latest release notes.
+See [CHANGELOG_v1.5.2.md](docs/CHANGELOG/CHANGELOG_v1.5.2.md) for the latest release notes.
 
 ---
 

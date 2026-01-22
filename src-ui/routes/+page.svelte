@@ -404,7 +404,7 @@
     class="mt-10 pt-6 border-t border-white/5 text-center text-xs opacity-40"
   >
     <p>
-      Aura v{$sidecarVersion || "1.5.1"} • Your Intelligent Wellness Companion
+      Aura v{$sidecarVersion || "1.5.0"} • Your Intelligent Wellness Companion
     </p>
     <p class="mt-1">All data stays local. Privacy first. Always.</p>
   </footer>

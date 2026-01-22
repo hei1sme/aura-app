@@ -13,6 +13,7 @@
     sessionState,
     nextBreak,
     sidecarConnected,
+    sidecarVersion,
     updateFromStatus,
     updateMetrics,
   } from "$lib/stores";
@@ -42,8 +43,9 @@
   onMount(async () => {
     // Setup event listeners
     unlisteners = await Promise.all([
-      onReady(() => {
+      onReady((data) => {
         sidecarConnected.set(true);
+        sidecarVersion.set(data.version);
       }),
       onStatus((status) => {
         sidecarConnected.set(true);

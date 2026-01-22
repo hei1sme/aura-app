@@ -225,5 +225,17 @@
     >
       <span class="text-xl">🎮</span>
     </button>
+    <button
+      class:active={activeTab === "data"}
+      on:click={() => (activeTab = "data")}
+    >
+      <span class="text-xl">🔒</span>
+    </button>
+    <button
+      class:active={activeTab === "about"}
+      on:click={() => (activeTab = "about")}
+    >
+      <span class="text-xl">ℹ️</span>
+    </button>
   </div>
 </main>

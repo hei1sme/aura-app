@@ -4,16 +4,16 @@
 
 ### ✨ New Features
 
-- **Auto-Update on Startup**: App tự động kiểm tra phiên bản mới khi khởi động (delay 5 giây)
-- **Update Modal**: Hiển thị modal đẹp mắt với thông tin version mới và release notes
-- **Skip Version**: Cho phép người dùng bỏ qua phiên bản cụ thể (giống VS Code, Chrome)
-- **Update Preferences**: Toggle bật/tắt auto-check trong Settings > About
+- **Auto-Update on Startup**: App automatically checks for new versions on startup (5-second delay)
+- **Update Modal**: Beautiful modal displaying new version info and release notes
+- **Skip Version**: Allow users to skip specific versions (similar to VS Code, Chrome)
+- **Update Preferences**: Toggle auto-check on/off in Settings > About
 
-### 🔧 Fixed
+### � Bug Fixes
 
-- Bổ sung `createUpdaterArtifacts` vào cấu hình Tauri để luôn sinh file chữ ký (signature)
-- Sửa workflow CI/CD: tự động tạo `latest.json`, upload đầy đủ file `.sig`
-- Sửa lỗi hardcode version ở dashboard, chuyển sang lấy version động từ sidecar
+- Added `createUpdaterArtifacts` to Tauri config to always generate signature files
+- Fixed CI/CD workflow: auto-generate `latest.json`, upload all `.sig` files
+- Fixed hardcoded version in dashboard, now fetches version dynamically from sidecar
 
 ### 📁 Files Changed
 
@@ -22,4 +22,4 @@
 - `src-ui/lib/components/settings/SettingsAbout.svelte` - Update preferences UI
 
 ---
-Xem thêm chi tiết các thay đổi tại repository.
+See the repository for more details on all changes.

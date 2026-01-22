@@ -57,6 +57,26 @@ jobs:
             echo "✅ TAURI_SIGNING_PRIVATE_KEY is present."
           fi
 
+      - name: Read Release Notes
+        id: read_changelog
+        shell: bash
+        run: |
+          CHANGELOG_FILE="docs/CHANGELOG/CHANGELOG_${{ github.ref_name }}.md"
+          echo "Looking for changelog at: $CHANGELOG_FILE"
+          
+          if [ -f "$CHANGELOG_FILE" ]; then
+            echo "✅ Found changelog file"
+            {
+              echo "release_body<<EOF"
+              cat "$CHANGELOG_FILE"
+              echo
+              echo "EOF"
+            } >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ Changelog file not found, using default message"
+            echo "release_body=See the assets to download this version and install." >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build the app
         id: tauri-build
         uses: tauri-apps/tauri-action@v0
@@ -67,8 +87,8 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: 'Aura ${{ github.ref_name }}'
-          releaseBody: 'See the assets to download this version and install.'
-          draft: false
+          releaseBody: ${{ steps.read_changelog.outputs.release_body }}
+          releaseDraft: false
           prerelease: false
           updaterJsonKeepUniversal: true
 

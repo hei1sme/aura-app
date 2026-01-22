@@ -133,7 +133,9 @@
             />
         </div>
         <h2 class="text-3xl font-light mb-1 tracking-tight">Aura</h2>
-        <p class="text-white/40 font-mono text-sm">v{appVersion || "1.5.1"}</p>
+        <p class="text-white/40 font-mono text-sm">
+            v{appVersion || "1.5.2"}
+        </p>
     </div>
 
     <!-- Update Section -->
@@ -148,7 +150,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium">Current Version</p>
-                    <p class="text-xs text-white/50">{appVersion || "1.5.1"}</p>
+                    <p class="text-xs text-white/50">
+                        {appVersion || "1.5.2"}
+                    </p>
                 </div>
 
                 {#if updateStatus === "idle" || updateStatus === "uptodate" || updateStatus === "error"}
