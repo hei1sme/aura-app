@@ -760,6 +760,7 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--minimized"])))
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         // Single instance: if another instance is launched, focus existing window
         .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             // Focus the session window when second instance tries to launch

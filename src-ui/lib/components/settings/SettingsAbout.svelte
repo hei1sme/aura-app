@@ -82,11 +82,36 @@
     }
 
     let appVersion = "";
+
+    // Auto-update check preference
+    let autoUpdateCheck = true;
+    let skippedVersion = "";
+
+    function toggleAutoUpdate() {
+        autoUpdateCheck = !autoUpdateCheck;
+        localStorage.setItem(
+            "aura_auto_update_check",
+            autoUpdateCheck ? "true" : "false",
+        );
+    }
+
+    function clearSkippedVersion() {
+        localStorage.removeItem("aura_skip_version");
+        skippedVersion = "";
+    }
+
     onMount(() => {
         // If sidecarVersion is available, use it, otherwise fallback (or get app version via tauri api)
         const unsubscribe = sidecarVersion.subscribe((v) => {
             appVersion = v;
         });
+
+        // Load auto-update preference
+        const savedPref = localStorage.getItem("aura_auto_update_check");
+        autoUpdateCheck = savedPref !== "false"; // Default to true
+
+        // Load skipped version
+        skippedVersion = localStorage.getItem("aura_skip_version") || "";
 
         return () => {
             unsubscribe();
@@ -108,7 +133,7 @@
             />
         </div>
         <h2 class="text-3xl font-light mb-1 tracking-tight">Aura</h2>
-        <p class="text-white/40 font-mono text-sm">v{appVersion || "1.4.0"}</p>
+        <p class="text-white/40 font-mono text-sm">v{appVersion || "1.5.1"}</p>
     </div>
 
     <!-- Update Section -->
@@ -123,19 +148,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium">Current Version</p>
-                    <p class="text-xs text-white/50">{appVersion || "1.4.0"}</p>
+                    <p class="text-xs text-white/50">{appVersion || "1.5.1"}</p>
                 </div>
 
                 {#if updateStatus === "idle" || updateStatus === "uptodate" || updateStatus === "error"}
                     <button
                         class="btn btn-sm btn-ghost border border-white/10 hover:bg-white/5"
                         on:click={checkForUpdates}
-                        disabled={updateStatus === "checking"}
                     >
-                        {#if updateStatus === "checking"}
-                            <span class="loading loading-spinner loading-xs"
-                            ></span>
-                        {/if}
                         Check for Updates
                     </button>
                 {/if}
@@ -270,6 +290,61 @@
                             Download & Install
                         </button>
                     {/if}
+                </div>
+            {/if}
+        </div>
+    </div>
+
+    <!-- Auto-Update Settings -->
+    <div
+        class="bg-white/5 rounded-2xl p-6 border border-white/5 backdrop-blur-sm"
+    >
+        <h3 class="text-lg font-medium mb-4 flex items-center gap-2">
+            <span class="text-cyan-400">🔄</span> Update Preferences
+        </h3>
+
+        <div class="space-y-4">
+            <!-- Auto-check toggle -->
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium">
+                        Check for updates on startup
+                    </p>
+                    <p class="text-xs text-white/50">
+                        Automatically check for new versions when app starts
+                    </p>
+                </div>
+                <button
+                    class="relative w-12 h-6 rounded-full transition-colors duration-200 {autoUpdateCheck
+                        ? 'bg-cyan-500'
+                        : 'bg-white/10'}"
+                    on:click={toggleAutoUpdate}
+                >
+                    <div
+                        class="absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 {autoUpdateCheck
+                            ? 'translate-x-7'
+                            : 'translate-x-1'}"
+                    ></div>
+                </button>
+            </div>
+
+            <!-- Skipped version info -->
+            {#if skippedVersion}
+                <div
+                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5"
+                >
+                    <div>
+                        <p class="text-sm text-white/70">Skipped version</p>
+                        <p class="text-xs font-mono text-white/50">
+                            v{skippedVersion}
+                        </p>
+                    </div>
+                    <button
+                        class="text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                        on:click={clearSkippedVersion}
+                    >
+                        Clear
+                    </button>
                 </div>
             {/if}
         </div>

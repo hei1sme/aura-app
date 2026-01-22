@@ -9,6 +9,8 @@
   } from "$lib/ipc";
   import type { UnlistenFn } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/core";
+  import { check } from "@tauri-apps/plugin-updater";
+  import UpdateModal from "$lib/components/UpdateModal.svelte";
 
   let unlisteners: UnlistenFn[] = [];
 
@@ -18,7 +20,64 @@
   let warningSeconds = 0;
   let warningTimer: any = null;
 
+  // Auto-Update State
+  let showUpdateModal = false;
+  let updateData: any = null;
+
+  async function checkForUpdates() {
+    try {
+      // Check user preference
+      const autoCheckEnabled = localStorage.getItem("aura_auto_update_check");
+      if (autoCheckEnabled === "false") {
+        console.log("[Aura] Auto-update check disabled by user");
+        return;
+      }
+
+      // Check if user skipped this version
+      const skipVersion = localStorage.getItem("aura_skip_version");
+
+      console.log("[Aura] Checking for updates...");
+      const update = await check();
+
+      if (update?.available) {
+        // Don't show if user skipped this specific version
+        if (skipVersion && update.version === skipVersion) {
+          console.log(
+            `[Aura] Skipping update ${update.version} (user skipped)`,
+          );
+          return;
+        }
+
+        console.log("[Aura] Update available:", update.version);
+        updateData = update;
+        showUpdateModal = true;
+      } else {
+        console.log("[Aura] App is up to date");
+      }
+    } catch (e) {
+      console.error("[Aura] Auto-update check failed:", e);
+    }
+  }
+
+  function handleUpdateLater() {
+    showUpdateModal = false;
+    updateData = null;
+  }
+
+  function handleUpdateSkip() {
+    showUpdateModal = false;
+    updateData = null;
+  }
+
+  function handleUpdateClose() {
+    showUpdateModal = false;
+    updateData = null;
+  }
+
   onMount(async () => {
+    // Auto-check for updates on app startup (with 5s delay for better UX)
+    setTimeout(checkForUpdates, 5000);
+
     // Setup global event listeners
     unlisteners = await Promise.all([
       onScheduleActionExecuted((data) => {
@@ -62,6 +121,16 @@
         >✕</button
       >
     </div>
+  {/if}
+
+  <!-- Update Modal -->
+  {#if showUpdateModal && updateData}
+    <UpdateModal
+      {updateData}
+      on:later={handleUpdateLater}
+      on:skip={handleUpdateSkip}
+      on:close={handleUpdateClose}
+    />
   {/if}
 </div>
 
