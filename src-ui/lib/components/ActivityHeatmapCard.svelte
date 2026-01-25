@@ -19,27 +19,33 @@
     $: grid = (() => {
         if (!$activityHeatmap || $activityHeatmap.length === 0) return [];
 
-        // Group by Date
-        const days: Record<string, typeof $activityHeatmap> = {};
-        const dates: string[] = [];
+        // Generate last 7 days dates
+        const last7Days: string[] = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            last7Days.push(d.toISOString().split("T")[0]);
+        }
 
+        // Create map for easy lookup
+        const dataMap: Record<string, typeof $activityHeatmap> = {};
         $activityHeatmap.forEach((item) => {
-            if (!days[item.date]) {
-                days[item.date] = [];
-                dates.push(item.date);
+            if (!dataMap[item.date]) {
+                dataMap[item.date] = [];
             }
-            days[item.date].push(item);
+            dataMap[item.date].push(item);
         });
 
-        // Sort dates (latest at bottom)
-        dates.sort();
-
-        return dates.map((date) => {
+        return last7Days.map((date) => {
             // Create array of 24 hours
             const hours = Array(24)
                 .fill(null)
                 .map((_, h) => {
-                    const found = days[date].find((i) => i.hour === h);
+                    // Find data for this hour if it exists
+                    let found = null;
+                    if (dataMap[date]) {
+                        found = dataMap[date].find((i) => i.hour === h);
+                    }
                     return found ? found : { intensity: 0, details: null };
                 });
             return {
