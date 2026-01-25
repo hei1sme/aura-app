@@ -5,7 +5,7 @@
 
 ### The Intelligent Wellness Companion for Developers
 
-[![Version](https://img.shields.io/badge/Version-1.5.5-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.6-8B5CF6?style=flat-square&logo=semanticrelease&logoColor=white)](https://github.com/hei1sme/aura-app/releases)
 [![Rust](https://img.shields.io/badge/Rust-1.70%2B-000000?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/ )
 [![Tauri](https://img.shields.io/badge/Tauri-2.0-FFC131?style=flat-square&logo=tauri&logoColor=white)](https://tauri.app)
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-2.0-FF3E00?style=flat-square&logo=svelte&logoColor=white)](https://kit.svelte.dev)
@@ -35,6 +35,8 @@
 
 Aura is constantly improving! Check out our latest updates:
 
+- **[v1.5.6](docs/CHANGELOG/CHANGELOG_v1.5.6.md)** - Visual Fix: Activity Intensity Heatmap data range
+- **[v1.5.6](docs/CHANGELOG/CHANGELOG_v1.5.6.md)** - Visual Fix: Activity Intensity Heatmap data range
 - **[v1.5.5](docs/CHANGELOG/CHANGELOG_v1.5.5.md)** - Rich Markdown Changelog integration in Update Dialog
 - **[v1.5.4](docs/CHANGELOG/CHANGELOG_v1.5.4.md)** - Smart App Detection & Interactive Dashboard Tooltips
 - **[v1.5.3](docs/CHANGELOG/CHANGELOG_v1.5.3.md)** - Critical Fixes: Break Notification Loop & Duplicate Sounds
@@ -392,7 +394,7 @@ We welcome contributions! Please check the [Issues](https://github.com/hei1sme/a
 
 ## 📋 Changelog
 
-See [CHANGELOG_v1.5.5.md](docs/CHANGELOG/CHANGELOG_v1.5.5.md) for the latest release notes.
+See [CHANGELOG_v1.5.6.md](docs/CHANGELOG/CHANGELOG_v1.5.6.md) for the latest release notes.
 
 ---
 
